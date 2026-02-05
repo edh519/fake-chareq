@@ -25,6 +25,9 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/orgs/$ORG/repos?per_page=100&type=all)
 
+            echo "pls"
+          echo "$json"
+          
           repos=$(echo "$json" | jq -r '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
       
           DUE_LIST=""
