@@ -162,3 +162,23 @@ jobs:
           echo -e "$REVIEWS_TABLE" | column -t -s '|'
           echo -e "$RETIRE_TABLE" | column -t -s '|'
 
+          - name: Send email
+            uses: dawidd6/action-send-mail@v3
+            with:
+              server_address: "smtp.york.ac.uk"
+              server_port: 25
+              username: do-not-reply
+              password:
+              subject: "GitHub README Scanner"
+              to: elise-brook.davis-hirst@york.ac.uk
+              from: do-not-reply@york.ac.uk
+              content_type: text/markdown
+              body: |
+                ## Repos with Reviews Due Soon
+          
+                ${{ env.REVIEWS_TABLE }}
+          
+                ## Repos Retiring Soon
+          
+                ${{ env.RETIRE_TABLE }}
+
