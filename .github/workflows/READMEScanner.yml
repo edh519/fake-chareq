@@ -36,27 +36,14 @@ jobs:
           if [[ "$readme" ]]; then
         
             # Extract all fields
-            status=$(echo "$readme" | grep "Repo-Status" | head -n1 | cut -d':' -f2- | xargs)
-            status=${status:-""}
-          
-            contents=$(echo "$readme" | grep "Repo-Contents" | head -n1 | cut -d':' -f2- | xargs)
-            contents=${contents:-""}
-          
-            service_name=$(echo "$readme" | grep "Repo-Service-Name" | head -n1 | cut -d':' -f2- | xargs)
-            service_name=${service_name:-""}
-          
-            ownership=$(echo "$readme" | grep "Repo-Ownership-Rating" | head -n1 | cut -d':' -f2- | xargs)
-            ownership=${ownership:-""}
-          
-            quality=$(echo "$readme" | grep "Repo-Quality-Rating" | head -n1 | cut -d':' -f2- | xargs)
-            quality=${quality:-""}
-          
-            next_review=$(echo "$readme" | grep "Repo-Next-Review-Due" | head -n1 | cut -d':' -f2- | xargs)
-            next_review=${next_review:-""}
-          
-            retirement=$(echo "$readme" | grep "Repo-Expected-Retirement-Date" | head -n1 | cut -d':' -f2- | xargs)
-            retirement=${retirement:-""}
-        
+            status=$(echo "$readme" | grep "Repo-Status" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            contents=$(echo "$readme" | grep "Repo-Contents" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            service_name=$(echo "$readme" | grep "Repo-Service-Name" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            ownership=$(echo "$readme" | grep "Repo-Ownership-Rating" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            quality=$(echo "$readme" | grep "Repo-Quality-Rating" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            next_review=$(echo "$readme" | grep "Repo-Next-Review-Due" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+            retirement=$(echo "$readme" | grep "Repo-Expected-Retirement-Date" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//')
+
             # Convert review date to epoch for comparison
             reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
         
