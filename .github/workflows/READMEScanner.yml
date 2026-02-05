@@ -14,6 +14,7 @@ jobs:
         env:
           ORG: uoy-trials
           TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
         run: |
           THRESHOLD_DAYS=7
           TODAY=$(date +%s)
