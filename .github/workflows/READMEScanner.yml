@@ -20,11 +20,11 @@ jobs:
 
           echo "Fetching repos for $ORG..."
 
-          repos=$(gh api \
-          --paginate \
-          /orgs/$ORG/repos?per_page=100 \
-          -q '.[] | select(.archived == false) | .name')
-
+           repos=$(curl -s \
+          -H "Authorization: Bearer $AUTH_GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github+json" \
+          https://api.github.com/orgs/$ORG/repos?per_page=100&type=all |
+          jq -r '.[]? | select(.archived == false) | .name')
 
           DUE_LIST=""
 
