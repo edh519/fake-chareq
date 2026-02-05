@@ -52,7 +52,7 @@ jobs:
           else
             echo "$repo - No review date found"
           fi
-        done
+          done
 
       
           echo -e "Repos due:$DUE_LIST"
