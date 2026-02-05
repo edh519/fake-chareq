@@ -78,21 +78,27 @@ jobs:
         shell: pwsh
         run: |
           function Build-Table($list, $headers) {
-            $table = $headers + "`n" + ("| " + ($headers -split "\|") | ForEach-Object { "---" } -join " | ") 
-            $rows = @()
-            foreach ($line in $list) {
+          # Split headers and build separator
+          $headerParts = $headers -split '\|'
+          $separatorRow = ($headerParts | ForEach-Object { '---' }) -join ' | '
+          $table = "$headers`n| $separatorRow |"
+      
+          $rows = @()
+          foreach ($line in $list) {
               if (-not $line) { continue }
-              $parts = $line -split "\|"
+              $parts = $line -split '\|'
               $repo, $status, $date, $service, $days = $parts
               $days = [int]$days
               if ($days -lt 0) { $due_status = "overdue"; $days = -$days } else { $due_status = "due soon" }
               $rows += @{Repo=$repo; Status=$status; Date=$date; Service=$service; Days=$days; DueStatus=$due_status; Epoch=(Get-Date $date -UFormat %s)}
-            }
-            $sorted = $rows | Sort-Object Epoch
-            foreach ($r in $sorted) {
+          }
+      
+          $sorted = $rows | Sort-Object Epoch
+          foreach ($r in $sorted) {
               $table += "`n| $($r.Repo) | $($r.Status) | $($r.Date) | $($r.Service) | $($r.Days) | $($r.DueStatus) |"
-            }
-            return $table
+          }
+      
+          return $table
           }
 
           $REVIEWS_TABLE = Build-Table $DUE_LIST "| Repo | Status | Next Review | Service | Days | Due Status |"
