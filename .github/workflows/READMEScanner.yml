@@ -159,9 +159,6 @@ jobs:
             RETIRE_TABLE="$RETIRE_TABLE\n| $_repoName | $_status | $_date | $_service | $_days | $_dueStatus |"
           done
 
-          echo -e "$REVIEWS_TABLE" | column -t -s '|'
-          echo -e "$RETIRE_TABLE" | column -t -s '|'
-
           - name: Send email
             uses: dawidd6/action-send-mail@v3
             with:
