@@ -1,0 +1,120 @@
+name: Org README Review Checker
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check repos
+        shell: pwsh
+        env:
+          ORG: uoy-trials
+          TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          THRESHOLD_DAYS: 28
+          RETIRE_THRESHOLD: 28
+        run: |
+          $TODAY = [int](Get-Date -UFormat %s)
+          $DUE_LIST = @()
+          $RETIRE_LIST = @()
+
+          Write-Host "Fetching repos for $env:ORG..."
+          $reposJson = gh api --paginate "/orgs/$env:ORG/repos" -q '.[] | select(.archived == $false -and (.name -notmatch "^stats-"))'
+          $repos = $reposJson | ForEach-Object { $_.name }
+
+          foreach ($repo in $repos) {
+            Write-Host "Checking $repo..."
+
+            # Skip forks
+            $isFork = gh api "/repos/$env:ORG/$repo" -q '.fork'
+            if ($isFork -eq $true) { Write-Host "$repo is a fork — skipping"; continue }
+
+            # Fetch README
+            try {
+              $readmeEncoded = gh api "/repos/$env:ORG/$repo/readme" -q '.content'
+              $readme = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($readmeEncoded))
+            } catch { continue }
+
+            # Extract fields safely
+            function Get-Field($text, $field) {
+              $match = ($text | Select-String -Pattern "$field\s*:\s*(.*)" | Select-Object -First 1)
+              if ($match) { return $match.Matches[0].Groups[1].Value.Trim() } else { return "" }
+            }
+
+            $status = Get-Field $readme "Repo-Status"
+            $service_name = Get-Field $readme "Repo-Service-Name"
+            $next_review = Get-Field $readme "Repo-Next-Review-Due"
+            $retirement = Get-Field $readme "Repo-Expected-Retirement-Date"
+
+            # Review due
+            if ($next_review) {
+              try { $reviewEpoch = [int][double]::Parse((Get-Date $next_review -UFormat %s)) } catch { $reviewEpoch = 0 }
+              $diffDays = [math]::Floor(($reviewEpoch - $TODAY)/86400)
+              if ($reviewEpoch -gt 0 -and $diffDays -le $env:THRESHOLD_DAYS) {
+                $DUE_LIST += "$repo|$status|$next_review|$service_name|$diffDays"
+              }
+            }
+
+            # Retirement due
+            if ($retirement) {
+              try { $retireEpoch = [int][double]::Parse((Get-Date $retirement -UFormat %s)) } catch { $retireEpoch = 0 }
+              $retireDays = [math]::Floor(($retireEpoch - $TODAY)/86400)
+              if ($retireEpoch -gt 0 -and $retireDays -le $env:RETIRE_THRESHOLD) {
+                $RETIRE_LIST += "$repo|$status|$retirement|$service_name|$retireDays"
+              }
+            }
+          }
+
+          # Export raw lists
+          Set-Variable -Name "DUE_LIST" -Value ($DUE_LIST -join "`n") -Scope Global
+          Set-Variable -Name "RETIRE_LIST" -Value ($RETIRE_LIST -join "`n") -Scope Global
+
+      - name: Build tables
+        shell: pwsh
+        run: |
+          function Build-Table($list, $headers) {
+            $table = $headers + "`n" + ("| " + ($headers -split "\|") | ForEach-Object { "---" } -join " | ") 
+            $rows = @()
+            foreach ($line in $list) {
+              if (-not $line) { continue }
+              $parts = $line -split "\|"
+              $repo, $status, $date, $service, $days = $parts
+              $days = [int]$days
+              if ($days -lt 0) { $due_status = "overdue"; $days = -$days } else { $due_status = "due soon" }
+              $rows += @{Repo=$repo; Status=$status; Date=$date; Service=$service; Days=$days; DueStatus=$due_status; Epoch=(Get-Date $date -UFormat %s)}
+            }
+            $sorted = $rows | Sort-Object Epoch
+            foreach ($r in $sorted) {
+              $table += "`n| $($r.Repo) | $($r.Status) | $($r.Date) | $($r.Service) | $($r.Days) | $($r.DueStatus) |"
+            }
+            return $table
+          }
+
+          $REVIEWS_TABLE = Build-Table $DUE_LIST "| Repo | Status | Next Review | Service | Days | Due Status |"
+          $RETIRE_TABLE = Build-Table $RETIRE_LIST "| Repo | Status | Retirement | Service | Days | Due Status |"
+
+          Set-Variable -Name "REVIEWS_TABLE" -Value $REVIEWS_TABLE -Scope Global
+          Set-Variable -Name "RETIRE_TABLE" -Value $RETIRE_TABLE -Scope Global
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: "smtp.york.ac.uk"
+          server_port: 25
+          username: "do-not-reply"
+          password:
+          subject: "GitHub README Scanner"
+          to: "elise-brook.davis-hirst@york.ac.uk"
+          from: "do-not-reply@york.ac.uk"
+          content_type: "text/markdown"
+          body: |
+            ## Repos with Reviews Due Soon
+            ${{ vars.REVIEWS_TABLE }}
+
+            ## Repos Retiring Soon
+            ${{ vars.RETIRE_TABLE }}
