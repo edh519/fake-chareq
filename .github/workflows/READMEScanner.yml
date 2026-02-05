@@ -24,9 +24,6 @@ jobs:
           repos=$(gh api --paginate /orgs/$ORG/repos \
           -q '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
 
-          
-          repos=$(echo "$json" | jq -r '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
-      
           DUE_LIST=""
       
           for repo in $repos; do
