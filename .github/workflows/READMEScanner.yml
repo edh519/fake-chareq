@@ -33,7 +33,7 @@ jobs:
           readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
         
           # Only proceed if README has the review field
-          if [[ "$readme" == *"Repo-Next-Review-Due"* ]]; then
+          if [[ "$readme" ]]; then
         
             # Extract all fields
             status=$(echo "$readme" | grep "^Repo-Status:" | sed 's/.*: //')
