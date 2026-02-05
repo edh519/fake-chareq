@@ -78,7 +78,8 @@ jobs:
                 RETIRE_LIST="$RETIRE_LIST\n- $repo | Status: $status | Retirement: $retirement | Service: $service_name"
               fi
             fi
-            done
+           fi
+          done
 
           # Output for workflow or email
           echo -e "Reviews due soon:$DUE_LIST"
