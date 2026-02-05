@@ -82,3 +82,32 @@ jobs:
           echo "retire_list<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RETIRE_LIST" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          # Initialize tables with headers
+          REVIEWS_TABLE="| Repo | Status | Next Review | Service |\n| --- | --- | --- | --- |"
+          RETIRE_TABLE="| Repo | Status | Retirement | Service |\n| --- | --- | --- | --- |"
+          
+          # Build Reviews table
+          while IFS= read -r line; do
+            # Skip empty lines
+            [ -z "$line" ] && continue
+            # Extract fields from your DUE_LIST line: "- repo | Status: ... | Next Review: ... | Service: ..."
+            repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
+            status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
+            next_review=$(echo "$line" | cut -d'|' -f3 | sed 's/Next Review: //;s/^ *//;s/ *$//')
+            service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
+          
+            REVIEWS_TABLE="$REVIEWS_TABLE\n| $repo | $status | $next_review | $service |"
+          done <<< "$DUE_LIST"
+          
+          # Build Retirement table
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
+            status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
+            retirement=$(echo "$line" | cut -d'|' -f3 | sed 's/Retirement: //;s/^ *//;s/ *$//')
+            service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
+          
+            RETIRE_TABLE="$RETIRE_TABLE\n| $repo | $status | $retirement | $service |"
+          done <<< "$RETIRE_LIST"
+
