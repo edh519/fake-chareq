@@ -15,7 +15,7 @@ jobs:
           ORG: uoy-trials
           TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-          THRESHOLD_DAYS: 7
+          THRESHOLD_DAYS: 28
           RETIRE_THRESHOLD: 28
         run: |
           TODAY=$(date +%s)
