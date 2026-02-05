@@ -1,5 +1,5 @@
 name: Org README Review Checker
-
+#| select(.archived == false and (.name | startswith("stats-") | not))
 on:
   schedule:
     - cron: '0 7 * * 1'
@@ -23,7 +23,7 @@ jobs:
           repos=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/orgs/$ORG/repos?per_page=100&type=all |   jq -r '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
+            https://api.github.com/orgs/$ORG/repos?per_page=100&type=all |   jq -r '.[] | .name')
 
           DUE_LIST=""
 
