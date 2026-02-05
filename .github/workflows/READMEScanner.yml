@@ -27,29 +27,33 @@ jobs:
           DUE_LIST=""
       
           for repo in $repos; do
-            echo "Checking $repo"
-      
-            readme=$(curl -s -f \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Accept: application/vnd.github.raw" \
-              https://api.github.com/repos/$ORG/$repo/readme)
+          echo "Checking $repo..."
+        
+          # Get README content (base64-decoded)
+          readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
+        
+          if [[ "$readme" == *"Repo-Next-Review-Due"* ]]; then
+            dateStr=$(echo "$readme" | grep "Repo-Next-Review-Due" | sed 's/.*: //')
+            
+            # Convert to epoch for comparison
+            reviewEpoch=$(date -d "$dateStr" +%s 2>/dev/null || echo 0)
+        
+            if [ "$reviewEpoch" -gt 0 ]; then
+              diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
               
-          echo "$readme"
-      
-            if [[ "$readme" == *"Repo-Next-Review-Due"* ]]; then
-              dateStr=$(echo "$readme" | grep "Repo-Next-Review-Due" | sed 's/.*: //')
-      
-              reviewEpoch=$(date -d "$dateStr" +%s 2>/dev/null || echo 0)
-      
-              if [ "$reviewEpoch" -gt 0 ]; then
-                diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
-      
-                if [ "$diffDays" -le "$THRESHOLD_DAYS" ]; then
-                  DUE_LIST="$DUE_LIST\n- $repo ($dateStr)"
-                fi
+              echo "$repo - Review date: $dateStr - in $diffDays days"
+        
+              if [ "$diffDays" -le $THRESHOLD_DAYS ]; then
+                DUE_LIST="$DUE_LIST\n- $repo ($dateStr)"
               fi
+            else
+              echo "$repo - Review date not parseable: $dateStr"
             fi
-          done
+          else
+            echo "$repo - No review date found"
+          fi
+        done
+
       
           echo -e "Repos due:$DUE_LIST"
       
