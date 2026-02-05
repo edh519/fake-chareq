@@ -24,8 +24,8 @@ jobs:
           $RETIRE_LIST = @()
 
           Write-Host "Fetching repos for $env:ORG..."
-          $reposJson = gh api --paginate "/orgs/$env:ORG/repos" -q '.[] | select(.archived == $false -and (.name -notmatch "^stats-"))'
-          $repos = $reposJson | ForEach-Object { $_.name }
+          $reposJson = gh api --paginate "/orgs/$env:ORG/repos" | ConvertFrom-Json
+          $repos = $reposJson | Where-Object { -not $_.archived -and -not ($_.name -like "stats-*") } | Select-Object -ExpandProperty name
 
           foreach ($repo in $repos) {
             Write-Host "Checking $repo..."
