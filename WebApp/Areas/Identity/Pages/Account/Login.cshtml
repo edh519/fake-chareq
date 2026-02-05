@@ -1,0 +1,50 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+<div class="d-flex">
+    <div class="ms-auto me-0 p-2">
+        <partial name="_ThemeToggleSwitchPartial" />
+    </div>
+</div>
+<div class="d-flex justify-content-center flex-md-column flex-xs-column text-center" style="height: 80vh">
+    <div class="justify-content-center d-inline-flex">
+        <div class="d-inline-block me-2 pe-3" style="margin-top: 140px">
+            <img class="d-img-none-xs d-img-md" src="~/images/YTU logo.png" alt="YTU Logo" />
+        </div>
+        <div class="border-lg-left">
+            <div class="d-inline-block pe-2 py-5 login-margin-top justify-content-lg-start">
+                <div class="">
+                    <img class="d-img-none-md d-img-xs" src="~/images/Horizontal YTU Logo.png" alt="Horizontal YTU Logo" />
+                </div>
+                <div class="row m-auto ">
+                    <div class="col-lg chareqTitle-md">
+                        <h1 style="font-size: 60px">
+                            <b>chareq</b>
+                        </h1>
+                    </div>
+                </div>
+                <div class="row m-auto ">
+                    <div class="col-lg ms-lg-1 mg-lg-1">
+                        <h6>REQUEST MANAGEMENT</h6>
+                    </div>
+                </div>
+                <div class="row mt-3 ms-lg-3 ms-md-2 ms-sm-3  btn-GoogleLogin-ml">
+                    <div>
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+
+                            @foreach (var provider in Model.ExternalLogins)
+                            {
+                                <button type="submit" class="btn-GoogleLogin" name="provider" value="@provider.Name" title="Log in using your University of York @provider.DisplayName account">
+                                    <img style="height: 3em;" src="~/images/Google/btn_google_signin_light_normal_web@2x.png" />
+                                </button>
+                            }
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

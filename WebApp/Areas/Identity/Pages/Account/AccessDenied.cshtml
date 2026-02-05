@@ -1,0 +1,43 @@
+﻿@page
+@using WebApp.Areas.Identity.Pages.Account
+@model AccessDeniedModel
+@{
+    ViewData["Title"] = "Access denied";
+}
+<div class="d-flex">
+    <div class="ms-auto me-0 p-2">
+        <partial name="_ThemeToggleSwitchPartial" />
+    </div>
+</div>
+<div class="d-flex justify-content-center flex-md-column flex-xs-column text-center" style="height: 80vh">
+    <div class="justify-content-center d-inline-flex">
+        <div class="d-inline-block me-2 pe-3" style="margin-top: 140px">
+            <img class="d-img-none-xs d-img-md" src="~/images/YTU logo.png" alt="YTU Logo" />
+        </div>
+        <div class="border-lg-left">
+            <div class="d-inline-block pe-2 py-5 login-margin-top justify-content-lg-start">
+                <div class="">
+                    <img class="d-img-none-md d-img-xs" src="~/images/Horizontal YTU Logo.png" alt="Horizontal YTU Logo" />
+                </div>
+                <div class="row m-auto ">
+                    <div class="col-lg chareqTitle-md">
+                        <h1 style="font-size: 60px">
+                            <b>chareq</b>
+                        </h1>
+                    </div>
+                </div>
+                <div class="row m-auto ">
+                    <div class="col-lg ms-lg-1 mg-lg-1">
+                        <h6>REQUEST MANAGEMENT</h6>
+                    </div>
+                </div>
+                    <div>
+                        <h4 class="text-danger">@ViewData["Title"]</h4>
+                        <p class="text-danger">You do not have access to this resource.</p>
+                        <br />
+                    <p>If you would like to request access, please email <a href="mailto:ytu-data@york.ac.uk">ytu-data@york.ac.uk</a>.</p>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>

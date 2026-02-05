@@ -1,0 +1,44 @@
+﻿@using BusinessLayer.ViewModels
+@using Newtonsoft.Json
+
+@{
+    PopupMessageViewModel popupMessageViewModel = null;
+    if (TempData["PopupMessage"] != null)
+    {
+        popupMessageViewModel = JsonConvert.DeserializeObject<PopupMessageViewModel>(TempData["PopupMessage"].ToString());
+    }
+}
+
+<div class="popup-message-div">
+    <div id="popupMessageSuccess"
+         class="alert alert-success alert-dismissible" role="alert"
+         onmouseover="popupMessageOnMouseOver()" onmouseout="popupMessageOnMouseOut()"
+         @(popupMessageViewModel?.IsSuccessful == true ? "" : "hidden")>
+        <strong><i class="far fa-smile"></i> Success.</strong>
+        <span id="popupMessageSuccessText">
+            @( popupMessageViewModel != null && popupMessageViewModel.IsSuccessful ? popupMessageViewModel.Message : "" )
+        </span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div id="popupMessageError"
+         class="alert alert-danger alert-dismissible" @*ITS THESE TWO CLASSSES THAT ARE THE ISSUE*@
+         role="alert"
+         style="display: flex; justify-content:space-between "
+         @(popupMessageViewModel?.IsSuccessful == false ? "" : "hidden")>
+        <div class=" text-start px-0">
+            <strong>
+                <i class="far fa-frown"></i>
+                We're sorry but that didn't work.
+            </strong>
+            <span id="popupMessageErrorText">
+                @( popupMessageViewModel != null && !popupMessageViewModel.IsSuccessful ? popupMessageViewModel.Message : "" )
+            </span>
+        </div>
+
+        <div class="text-end">
+            Please contact <a href="mailto:ytu-techsupport-group@york.ac.uk">YTU Tech Support</a> if the problem persists.
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>

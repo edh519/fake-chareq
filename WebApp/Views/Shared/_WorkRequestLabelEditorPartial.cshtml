@@ -1,0 +1,77 @@
+﻿@model BusinessLayer.ViewModels.LabelEditorViewModel
+@using BusinessLayer.ViewModels
+
+@section Scripts {
+
+}
+
+@{
+    List<LabelViewModel> labelsAvailalble = Model.AllLabels?.Labels?.OrderBy(o => o.LabelShort).ToList() ?? new();
+
+    // If there are any labels assigned (with null check)
+    if (Model.LabelsAssigned?.Labels?.Any() ?? false)
+    {
+        foreach (LabelViewModel label in Model.LabelsAssigned.Labels)
+        {
+            labelsAvailalble.RemoveAll(x => x.LabelId == label.LabelId);
+        }
+    }
+
+    bool isAuthoriser = User.IsInRole("Authoriser");
+}
+
+<input value="@isAuthoriser" name="isAuthoriser" type="hidden" />
+
+<div class="card-header">
+    <b>Labels</b>
+    @if (!Model.IsLoggedInUserOfRoleTypeUser)
+    {
+        <button class="btn btn-outline-danger float-end m-0 text-color-theme py-0" onclick="ToggleLabelRemoval(this)" name="removeLabelsBtn">Remove</button>
+    }
+</div>
+
+<div class="card-body labels-wrapper py-1" name="labelsWrapper">
+    @if (Model.LabelsAssigned?.Labels != null)
+    {
+        @foreach (var label in Model.LabelsAssigned.Labels)
+        {
+            label.WorkRequestId = Model.WorkRequestId;
+            <partial name="_LabelPartial" model="label" />
+        }
+
+    }
+    @if (Model.LabelsAssigned?.Labels == null || Model.LabelsAssigned.Labels.Count == 0)
+    {
+        <i class="text-muted-theme-toggle">There are no labels.</i>
+    }
+</div>
+
+
+@if (!Model.IsLoggedInUserOfRoleTypeUser)
+{
+    <div class="alert alert-info mt-1 mb-0" name="removeLabelInfo"><i class="fa fa-info-circle"></i> Remove labels by clicking on them above.</div>
+    
+    <span class="add-labels-wrapper input-group" name="addLabelsWrapper">
+        <label for="labelsSelect" class="visually-hidden">
+            Label
+        </label>
+
+        <select id="labelsSelect"
+                class="form-control"
+                name="labelsSelect"
+                style="padding-left:1rem;">
+            <option selected disabled>Select label</option>
+
+            @if (labelsAvailalble != null)
+            {
+                @foreach (var label in labelsAvailalble)
+                {
+                    <option value="@label.LabelId">@label.LabelShort</option>
+                }
+            }
+        </select>
+        <span class="input-group-append">
+            <button class="btn btn-primary input-group-append" onclick="AddSelectedLabel(this, @Model.WorkRequestId)">Add</button>
+        </span>
+    </span>
+}

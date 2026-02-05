@@ -1,0 +1,91 @@
+﻿@model BusinessLayer.ViewModels.LabelsViewModel
+@using BusinessLayer.Helpers
+@using Microsoft.AspNetCore.Http
+
+@{
+    string pageHeader;
+    string queryParam = Context.Request.Query["isArchived"];
+    bool? isArchived = string.IsNullOrWhiteSpace(queryParam) ? null : Boolean.Parse(queryParam);
+    switch (isArchived)
+    {
+        case true:
+            pageHeader = "Archived Labels";
+            break;
+        case false:
+            pageHeader = "Active Labels";
+            break;
+        default:
+            pageHeader = "Labels";
+            break;
+    }
+
+    ViewBag.Title = "Manage " + pageHeader; // Set the page title.
+
+
+}
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/Pages/ManageLabels.js" asp-append-version="true"></script>
+}
+
+    <h1>Manage @pageHeader</h1>
+
+    <div class="row">
+        <div class="col-6">
+        @if (!isArchived.HasValue || !isArchived.Value)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageLabels" asp-route-isArchived="true">View Archived</a>
+        }
+        @if (!isArchived.HasValue || isArchived.Value)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageLabels" asp-route-isArchived="false">View Active</a>
+        }
+        @if (isArchived.HasValue)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageLabels">View All</a>
+        }
+        </div>
+        <div class="col-6">
+            <a class="btn btn-primary my-3 float-end" asp-action="AddLabel">Add New Label</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table id="LabelsTable" class="table table-hover table-theme-toggle" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th class="no-sort">Preview</th>
+                        <th class="no-sort"><span class="visually-hidden">Edit/Archive</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Labels != null)
+                {
+                    @foreach (var label in Model.Labels)
+                    {
+                        <tr class="@(@label.IsArchived ? "text-muted-theme-toggle" : "")">
+                            <td>@label.LabelShort</td>
+                            <td>@label.LabelDescription</td>
+                            <td>
+                                <partial name="_LabelPartial" model="@label"/>
+                            </td>
+                            <td class="text-center">
+                                <a class="btn btn-primary" asp-action="EditLabel" asp-route-labelId="@label.LabelId">Edit</a>
+                                @if (label.IsArchived)
+                                {
+                                    <a class="btn btn-warning text-black ms-2" onclick="archiveClick(@label.LabelId, @(label.IsArchived ? 1 : 0))" href="#">Unarchive</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-danger text-white ms-2" onclick="archiveClick(@label.LabelId,@(label.IsArchived ? 1 : 0))" href="#">Archive</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

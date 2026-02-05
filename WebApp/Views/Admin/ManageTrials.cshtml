@@ -1,0 +1,90 @@
+﻿@model BusinessLayer.ViewModels.TrialsViewModel
+@using BusinessLayer.Helpers
+@using Microsoft.AspNetCore.Http
+
+@{
+    string pageHeader;
+    string queryParam = Context.Request.Query["showActiveTrials"];
+    bool? showActiveTrials = string.IsNullOrWhiteSpace(queryParam) ? null : Boolean.Parse(queryParam);
+    switch (showActiveTrials)
+    {
+        case false:
+            pageHeader = "Archived Trials";
+            break;
+        case true:
+            pageHeader = "Active Trials";
+            break;
+        default:
+            pageHeader = "Trials";
+            break;
+    }
+
+    ViewBag.Title = "Manage " + pageHeader; // Set the page title.
+
+
+}
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/Pages/ManageTrials.js" asp-append-version="true"></script>
+}
+
+    <h1>Manage @pageHeader</h1>
+
+    <div class="row">
+        <div class="col-6">
+        @if (!showActiveTrials.HasValue || showActiveTrials.Value)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageTrials" asp-route-showActiveTrials="false">View Archived</a>
+        }
+        @if (!showActiveTrials.HasValue || !showActiveTrials.Value)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageTrials" asp-route-showActiveTrials="true">View Active</a>
+        }
+        @if (showActiveTrials.HasValue)
+        {
+            <a class="btn btn-secondary my-3 me-3 float-left" asp-action="ManageTrials">View All</a>
+        }
+        </div>
+        <div class="col-6">
+        <a class="btn btn-primary my-3 float-end" asp-action="AddTrial" asp-route-showActiveTrials="@showActiveTrials">Add New Trial</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table id="TrialsTable" class="table table-hover table-theme-toggle" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th class="no-sort "><span class="visually-hidden">Edit/Archive</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Trials != null)
+                {
+                    @foreach (var trial in Model.Trials)
+                    {
+                        @if (trial.TrialId != 1000) // TrialId = 1000 is reserved as 'Other'
+                        {
+                            <tr class="@(trial.IsActive ? "fw-bold" : "")">
+                                <td>@trial.TrialId</td>
+                                <td>@trial.TrialName</td>
+                                <td class="text-center">
+                                    <a class="btn btn-primary" asp-action="EditTrial" asp-route-showActiveTrials="@showActiveTrials" asp-route-trialId="@trial.TrialId">Edit</a>
+                                    @if (!trial.IsActive)
+                                    {
+                                        <a class="btn btn-warning text-black ms-2" onclick="archiveClick(@trial.TrialId, @(trial.IsActive ? 0 : 1))" href="#">Unarchive</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-danger text-white ms-2" onclick="archiveClick(@trial.TrialId, @(trial.IsActive ? 0 : 1))" href="#">Archive</a>
+                                    }
+                                </td>
+                            </tr>
+                        }  
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

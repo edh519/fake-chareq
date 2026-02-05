@@ -1,0 +1,135 @@
+﻿@using BusinessLayer.Helpers
+@using WebApp.Controllers
+
+@{
+    ViewData["Title"] = "Accessibility Statement";
+}
+
+<h1>Accessibility Statement</h1>
+<div class="col pt-5" style="min-height:50vh;">
+    <div class="col col-lg-9">
+        <article>
+            <p class="lead">
+                The York Trials Unit is committed to making its website accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018.
+            </p>
+            <p>
+                This accessibility statement applies to content published on the <a href="https://ytu.york.ac.uk/ChaReq/">https://ytu.york.ac.uk/ChaReq/</a> domain.
+            </p>
+            <p>
+                We want as many people as possible to be able to use this website. On most pages on the website you should be able to:
+                <ul>
+                    <li>
+                        Navigate using just the keyboard.
+                    </li>
+                    <li>
+                        Navigate using speech recognition software.
+                    </li>
+                    <li>
+                        Zoom in up to 500% without the text spilling off the screen.
+                    </li>
+                    <li>
+                        Change colours, contrast levels and fonts using browser or device settings.
+                    </li>
+                    <li>
+                        Listen to content using a screen reader.
+                    </li>
+                </ul>
+                We've also made the website text as simple as possible to understand.
+            </p>
+            <p>
+                <a href="https://mcmw.abilitynet.org.uk/">AbilityNet’s My Computer My Way</a> pages have advice on adjustments you can make to your computer, laptop, tablet or smartphone to make it easier to use.
+            </p>
+        </article>
+        <article>
+            <h2 class="pt-3">
+                Feedback and contact information
+            </h2>
+            <h3>
+                Reporting accessibility problems with this website
+            </h3>
+            <p>
+                We are always looking to improve the accessibility of this website. If you find any problems not listed on this page, or think we're not meeting accessibility requirements, you can report an accessibility issue via the <a asp-controller="@(ControllerHelpers.GetControllerName<HomeController>())" asp-action="@nameof(HomeController.ContactUs)">Contact Us page</a>.
+            </p>
+            <p>
+                If you have any queries about the website or need information provided in a different format like accessible PDF, large print, easy read, audio recording or braille, please email us at <a href="mailto:ytu-developers-group@york.ac.uk">ytu-developers-group@york.ac.uk</a>.
+            </p>
+            <h3 class="pt-2">
+                Enforcement procedure
+            </h3>
+            <p>
+                The Equality and Human Rights Commission (EHRC) is responsible for enforcing the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018 (the ‘accessibility regulations’). If you’re not happy with how we respond to your complaint, <a href="https://www.equalityadvisoryservice.com/">contact the Equality Advisory and Support Service (EASS)</a>.
+            </p>
+        </article>
+        <article>
+            <h2 class="pt-3">
+                Technical information about this website's accessibility
+            </h2>
+            <h3>
+                Compliance status
+            </h3>
+            <p>
+                This website is partially compliant with the <a href="https://www.w3.org/TR/WCAG21/">Web Content Accessibility Guidelines version 2.1 AA Standard</a> due to the non-compliances listed below.
+            </p>
+            <h3>
+                Non-accessible content
+            </h3>
+            <h4>
+                Non-compliance with the accessibility regulations
+            </h4>
+            <h5>
+                Issues with text
+            </h5>
+            <ul>
+                <li>
+                    Some pages contain text which is not as simple as possible to understand. Some of our content is technical, and contains scientific terms and language. In some instances we have not been able to simplify the wording without changing the meaning of the text. This fails WCAG 2.1 success criterion 3.1.5 (Reading Level).
+                </li>
+            </ul>
+        </article>
+        <article>
+            <h2 class="pt-3">
+                How we tested this website
+            </h2>
+            <p>
+                We tested our website over several periods and continue to monitor on an ongoing basis. We use a combination of methods to check our site:
+                <ul>
+                    <li>
+                        <b>Manual testing:</b> we used an accessibility checklist to manually check a representative sample of pages from across our website. This included checking that our pages can be navigated using only a keyboard, and testing any colour contrasts that could not be automatically checked.
+                    </li>
+                    <li>
+                        <b>Automated testing:</b> we used WAVE, which is a Google Chrome extension that scans our pages for accessibility errors, and lets us know which ones are the highest priority to fix.
+                    </li>
+                    <li>
+                        <b>User testing:</b> we have set up a training version of the website for users to test and practice on prior to any changes going to the live website and have regular meetings with the team to discuss any issues or updates.
+                    </li>
+                </ul>
+            </p>
+        </article>
+        <article>
+            <h2 class="pt-3">
+                What we're doing to improve accessibility
+            </h2>
+            <ul>
+                <li>
+                    We will be using WAVE more widely to identify and fix content issues which affect individual pages.
+                </li>
+                <li>
+                    Our testing identified a range of issues with our templates that were affecting large numbers of pages across our website. Most of these issues have now been fixed.
+                </li>
+                <li>
+                    We are ensuring that our development processes include accessibility considerations and testing as standard.
+                </li>
+                <li>
+                    All staff have participated in accessibility training to be aware of what should be available as standard on websites.
+                </li>
+            </ul>
+        </article>
+        <article>
+            <h2 class="pt-3">
+                Preparation of this accessibility statement
+            </h2>
+            <p>
+                This statement was prepared on 5th  January 2026. It was last reviewed on 5th January 2026.
+            </p>
+        </article>
+    </div>
+</div>

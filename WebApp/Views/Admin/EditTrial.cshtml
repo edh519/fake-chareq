@@ -1,0 +1,135 @@
+﻿@using BusinessLayer.Helpers
+@using BusinessLayer.ViewModels
+@using Enums.Enums
+@using WebApp.Controllers
+@model BusinessLayer.ViewModels.TrialViewModel
+
+@{
+    ViewBag.Title = "Edit Trial";
+    string queryParam = Context.Request.Query["showActiveTrials"];
+    bool? showActiveTrials = string.IsNullOrWhiteSpace(queryParam) ? null : Boolean.Parse(queryParam);
+}
+
+@section Scripts {
+    <script asp-src-include="~/js/Pages/EditTrial.js" asp-append-version="true"></script>
+
+}
+
+
+<h1>Edit Trial</h1>
+<form asp-action="EditTrial" asp-controller="Admin" method="post" enctype="multipart/form-data" role="form">
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialId"></label> <i class="text-muted-theme-toggle">(Non-editable)</i>
+            <input class="form-control" asp-for="TrialId" readonly />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialName"></label>
+            <input class="form-control" asp-for="TrialName" />
+            <span asp-validation-for="TrialName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialEmail"></label>
+            <input class="form-control" asp-for="TrialEmail" />
+            <span asp-validation-for="TrialEmail" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="IsActive"></label>
+            <select class="form-control" asp-for="IsActive">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialAttribution"></label>
+            <select class="form-control" asp-for="TrialAttribution" asp-items="Html.GetEnumSelectList<TrialAttribution>()">
+                <option value="">Not Attributed</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialOwner"></label>
+            <span data-bs-toggle="tooltip" data-bs-placement="right" title="Select this only if the trial is always handled by the same team.">
+                <i class="bi bi-info-circle ms-1 text-muted"></i>
+            </span>
+            <select class="form-control" asp-for="TrialOwner" asp-items="Html.GetEnumSelectList<TrialAttribution>()">
+                <option value="">No Owner</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <input type="hidden" asp-for="@showActiveTrials" />
+            <button class="btn btn-primary float-end my-3" type="submit">Submit Changes</button>
+            <a class=" btn btn-secondary float-end my-3 me-3 pointerOnHover text-white" onclick="history.back()">Cancel</a>
+        </div>
+    </div>
+</form>
+<div>
+    <div>
+        <h2>Configured Repositories</h2>
+    </div>
+    @if (Model.ConfiguredRepositories == null || !Model.ConfiguredRepositories.Any())
+    {
+        <p>No configured repositories available.</p>
+    }
+    else
+    {
+        <table class="col-lg-4 table table-hover table-theme-toggle">
+            <thead>
+            <tr>
+                <th>Repository ID</th>
+                <th>Repository Name</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (ConfiguredTrialRepositoyViewModel repo in Model.ConfiguredRepositories)
+            {
+                <tr>
+                    <td>@repo.Repository.Id</td>
+                    <td><a href="@repo.Repository.HtmlUrl" target="_blank">@repo.Repository.Name</a></td>
+                    <td>
+                        @if (!repo.HasAssociatedWorkRequests)
+                        {
+                            <form asp-action="@(nameof(AdminController.DeleteRepository))" asp-controller="@(ControllerHelpers.GetControllerName<AdminController>())" method="post" style="display:inline;">
+                                <input type="hidden" name="repositoryId" value="@repo.Repository.Id"/>
+                                <input type="hidden" name="trialId" value="@Model.TrialId"/>
+                                <button type="submit" class="btn btn-link text-danger"><i class="fas fa-times"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    
+    
+    <div>
+        <h2>Add New Repository</h2>
+        <form asp-action="AddRepositoryToTrial" asp-controller="Admin" method="post">
+            <input type="hidden" name="trialId" value="@Model.TrialId"/>
+            <div class="row">
+                <div class="col-lg-4">
+                    <label for="repositoryId">Repository id/name or url</label>
+                    <input class="form-control" id="repositoryId" name="repositoryId" required/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
+                    <button type="submit" class="btn btn-primary my-3">Add Repository</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

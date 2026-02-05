@@ -1,0 +1,21 @@
+﻿@using BusinessLayer.Helpers
+@using WebApp.Controllers
+@{
+    string Title = "Support";
+
+    ViewData["Title"] = Title;
+}
+
+<h1>@Title</h1>
+
+<h2 class="fs-4">Having trouble with this application?</h2>
+
+<p>Check out the <a class="btn-sm btn-primary rounded-pill text-decoration-none" href="https://uoy.atlassian.net/wiki/spaces/YTUGuides/pages/24773343/ChaReq+-+Change+Request+Manager" rel="noopener"><i class="fa fa-link" aria-hidden="true"></i> Wiki pages</a> for this application.</p>
+
+<p>Email technical support here: <a class="btn-sm btn-primary rounded-pill text-decoration-none" href="mailto:ytu-techsupport-group@york.ac.uk"><i class="fas fa-envelope" aria-hidden="true"></i> YTU-TechSupport-Group@york.ac.uk</a></p>
+
+@if (User?.Identity?.IsAuthenticated == true)
+{
+<p>Contact us using our <a class="btn-sm btn-primary rounded-pill text-decoration-none" asp-controller=@(ControllerHelpers.GetControllerName<HomeController>())
+                               asp-action=@nameof(HomeController.ContactUs)><i class="fas fa-envelope" aria-hidden="true"></i> Contact us Form</a></p>
+}

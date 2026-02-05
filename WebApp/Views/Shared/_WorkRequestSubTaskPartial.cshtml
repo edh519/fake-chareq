@@ -1,0 +1,75 @@
+﻿@using BusinessLayer.Helpers
+@using BusinessLayer.ViewModels
+@using Enums.Enums
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    bool isAuthoriser = User.IsInRole("Authoriser");
+}
+
+<input value="@isAuthoriser" name="isAuthoriser" type="hidden" />
+
+<div class="card-header">
+    <b>Sub Tasks</b>
+    @if (!Model.IsLoggedInUserOfRoleTypeUser && !(Model.WorkRequestStatus == (int)WorkRequestStatusEnum.Completed || Model.WorkRequestStatus == (int)WorkRequestStatusEnum.Abandoned))
+    {
+        <button class="btn btn-outline-success float-end m-0 text-color-theme py-0" onclick="AddSubTask(this)" name="addSubTaskBtn">Add</button>
+    }
+</div>
+
+<div class="card-body py-1">
+    @if (Model.SubTasks != null)
+    {
+        <div class="thin-scrollbar" style="max-height: 100px; overflow-y: auto;">
+            @foreach (var subTask in Model.SubTasks)
+            {
+                var status = subTask.SubTask.Status?.SubTaskStatusId?.ToString();
+                var assignee = @CommonHelpers.RemoveDomainFromEmail(subTask.SubTask.Assignee.Email) ?? "Unassigned";
+                var fullTitle = subTask.SubTask.SubTaskTitle;
+
+                <div class="d-flex justify-content-between align-items-center small mb-1 cursor-pointer"
+                     onclick="openAccordion('heading-@subTask.SubTask.SubTaskId')">
+
+                    <span class="text-truncate"
+                          style="max-width: 200px;"
+                          data-bs-toggle="tooltip"
+                          data-bs-html="true"
+                          title="<strong>Title:</strong> @fullTitle<br><strong>Assignee:</strong> @assignee<br><strong>Status:</strong> @status">
+                        @fullTitle
+                    </span>
+
+                    <span data-bs-toggle="tooltip"
+                          title="Status: @status">
+                        @if (status == "Open")
+                        {
+                            <i class="bi bi-circle text-primary"></i>
+                        }
+                        else if (status == "Approved")
+                        {
+                            <i class="bi bi-check-circle text-success"></i>
+                        }
+                        else if (status == "Rejected")
+                        {
+                            <i class="bi bi-x-circle text-danger"></i>
+                        }
+                        else if (status == "Abandoned")
+                        {
+                            <i class="bi bi-dash-circle text-secondary"></i>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+
+
+
+    }
+    @if (Model.SubTasks == null || Model.SubTasks.Count == 0)
+    {
+        <i class="text-color-theme">There are no sub tasks.</i>
+    }
+</div>
+
+<link rel="stylesheet" href="~/css/work-request-sub-task-partial.css">
+

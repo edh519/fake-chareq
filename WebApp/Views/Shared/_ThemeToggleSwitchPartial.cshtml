@@ -1,0 +1,26 @@
+﻿<div class="theme-switch-wrapper">
+    <label id="theme-switch" class="theme-switch" for="theme-checkbox" onchange="switchTheme()">
+        <input type="checkbox" id="theme-checkbox" />
+        <span class="slider round">
+            <span class="visually-hidden">Toggle light/dark mode</span>
+            <span class="float-end light-mode-switch-text"><i class="fas fa-sun"></i></span>
+            <span class="float-left dark-mode-switch-text"><i class="fas fa-moon"></i></span>
+        </span>
+    </label>
+</div>
+<script type="text/javascript">
+$(document).ready(function() {
+    switchThemeSwitchTitle();
+    $("#theme-switch").change(function() {
+        switchThemeSwitchTitle();
+    });
+});
+
+let switchThemeSwitchTitle = () => {
+    if (document.documentElement.getAttribute("data-theme") != "dark") {
+        $(".theme-switch-wrapper").attr("title", "Click to toggle to dark mode");
+    } else {
+        $(".theme-switch-wrapper").attr("title", "Click to toggle to light mode");
+    }
+}
+</script>

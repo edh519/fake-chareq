@@ -1,0 +1,18 @@
+-- 20230622 jw3677: Remove access for operative.
+
+DECLARE @UserID NVARCHAR(450)
+SELECT @UserID = Id
+FROM AspNetUsers
+WHERE Email = 'chris.andrew@york.ac.uk'
+
+DELETE
+FROM dbo.AspNetUserClaims
+WHERE UserId = @UserID
+
+DELETE
+FROM dbo.AspNetUserLogins
+WHERE UserId = @UserID
+
+DELETE
+FROM dbo.AspNetUserRoles
+WHERE UserId = @UserID

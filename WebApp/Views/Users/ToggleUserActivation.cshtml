@@ -1,0 +1,44 @@
+﻿@using WebApp.Controllers
+@using BusinessLayer.Helpers
+@model BusinessLayer.ViewModels.UserSimpleViewModel
+
+
+@{
+    ViewData["Title"] = "User Management - Toggle Activation";
+    string action = Model.IsLocked ? "Activate" : "Deactivate";
+}
+
+<div class=" ms-md-5">
+    <h1>@action User</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card styled-card">
+                <h5 class="card-header">
+                    @Model.Username
+                </h5>
+                <div class="card-body">
+                    <dl>
+                        <dt>Email: </dt>
+                        <dd>@Model.Email</dd>
+                        <dt>Role: </dt>
+                        <dd>@Model.RoleAsString</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <h5 class="p-3">Are you sure you wish to @action.ToLower() this user?</h5>
+            <form asp-action="@nameof(UsersController.ToggleUserActivation)">
+                <div class="form-group">
+                    <input asp-for="Username" type="hidden" />
+                    <input asp-for="UserId" type="hidden" />
+                    <input asp-for="Email" type="hidden" />
+                    <input asp-for="IsLocked" type="hidden" />
+                </div>
+                <div class="form-group">
+                    <a asp-action="@nameof(UsersController.Index)" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Back to Users</a>
+                    <input type="submit" value="@action" class="btn btn-primary float-end" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

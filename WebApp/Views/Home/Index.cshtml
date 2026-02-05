@@ -1,0 +1,198 @@
+﻿@using BusinessLayer.Helpers
+@using WebApp.Controllers
+@model BusinessLayer.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "Home";
+
+    string dateInput = ViewBag.DateInput ?? "12m";
+}
+
+<style>
+    @@media (max-width: 1300px) {
+        .chart-container {
+            min-width: 300px !important;
+        }
+
+        .col-4 > a.card {
+            max-width: 200px;
+            margin: 0 auto; 
+            font-size: 0.85rem; 
+            padding: 0;
+        }
+            .col-4 > a.card .card-header h1 {
+                font-size: 1.5rem; 
+                line-height: 1;
+                margin: 0;
+            }
+            .col-4 > a.card .card-footer h5 {
+                font-size: 1rem;
+                margin: 0;
+                padding: 0;
+                line-height: 1.2;
+            }
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-5 d-flex flex-column gap-4">
+        <div class="row g-2">
+            <div class="col d-flex">
+                <a asp-controller="WorkRequest" asp-action="CreateWorkRequest"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0"><i class="fas fa-plus-circle"></i>
+                            <span class="visually-hidden">Add Request</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">Add Request</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col d-flex">
+                <a asp-controller="ViewAllWorkRequests" asp-action="Index"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0">
+                            <i class="fas fa-search"></i>
+                            <span class="visually-hidden">View Request</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">View Requests</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col d-flex">
+                <a asp-controller="Subscriptions" asp-action="Index"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0">
+                            <i class="fas fa-eye"></i>
+                            <span class="visually-hidden">Subscriptions</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">Subscriptions</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col d-flex">
+                <a asp-controller="ViewAllSubTasks" asp-action="Index"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0">
+                            <i class="fas fa-search"></i>
+                            <span class="visually-hidden">View Sub Tasks</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">View Sub Tasks</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col d-flex">
+                <a asp-controller="@(ControllerHelpers.GetControllerName<DataExportController>())" asp-action="@(nameof(DataExportController.Index))"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0">
+                            <i class="fas fa-file-export"></i>
+                            <span class="visually-hidden">Data Exports</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">Data Exports</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col d-flex">
+                <a asp-controller="Home" asp-action="ContactUs"
+                   class="card text-center text-decoration-none text-color-theme-important h-100 d-flex flex-column">
+                    <div class="card-header bg-primary text-white p-2">
+                        <h1 class="m-0">
+                            <i class="fas fa-envelope"></i>
+                            <span class="visually-hidden">Contact Us</span>
+                        </h1>
+                    </div>
+                    <div class="card-footer p-2 d-flex flex-grow-1 align-items-stretch justify-content-center">
+                        <h2 class="fs-5 m-0">Contact Us</h2>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="btn-group" role="group" aria-label="Time range filters">
+            <a asp-action="Index" asp-route-dateInput="1w" class="btn accessible-blue @(dateInput == "1w" ? "active" : "")" data-bs-toggle="tooltip" title="Filter data on charts to 1 week"> 1w</a>
+            <a asp-action="Index" asp-route-dateInput="4w" class="btn accessible-blue @(dateInput == "4w" ? "active" : "")" data-bs-toggle="tooltip" title="Filter data on charts to 4 weeks"> 4w</a>
+            <a asp-action="Index" asp-route-dateInput="3m" class="btn accessible-blue @(dateInput == "3m" ? "active" : "")" data-bs-toggle="tooltip" title="Filter data on charts to 3 months"> 3m</a>
+            <a asp-action="Index" asp-route-dateInput="6m" class="btn accessible-blue @(dateInput == "6m" ? "active" : "")" data-bs-toggle="tooltip" title="Filter data on charts to 6 months"> 6m</a>
+            <a asp-action="Index" asp-route-dateInput="12m" class="btn accessible-blue @(dateInput == "12m" ? "active" : "")" data-bs-toggle="tooltip" title="Filter data on charts to 12 months">12m</a>
+        </div>
+
+        <div class="stats-card card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Time-based charts
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div class="chart-container" style="width: 100%; height: 250px;">
+                        <canvas id="durationStackedChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                    <div class="chart-container" style="width: 100%; height: 250px;">
+                        <canvas id="durationScatterChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 d-flex flex-column gap-4">
+        <div class="stats-card card">
+            <div class="card-header">
+                Overview
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="chart-container" style="flex: 1; min-width: 700px; height: 280px;">
+                        <canvas id="stackedChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                    <div class="chart-container" style="min-width: 300px; height: 280px;">
+                        <canvas id="statusPieChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card card">
+            <div class="card-header">
+                Work request charts
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="chart-container" style="min-width: 300px; height: 280px;">
+                        <canvas id="assignmentChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                    <div class="chart-container" style="flex: 1; min-width: 700px; height: 280px;">
+                        <canvas id="incompleteTaskBarChart" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+<script>
+    var dateRange = "@dateInput";
+
+    var totalWRsPerTrial = @Html.Raw(Json.Serialize(Model.TotalWRsPerTrial));
+    var allWRsByStatus = @Html.Raw(Json.Serialize(Model.AllWRsByStatus));
+    var averageDecisionsAndCompletedTime = @Html.Raw(Json.Serialize(Model.AverageDecisionsAndCompletedTime));
+    var decisionsAndCompletedTime = @Html.Raw(Json.Serialize(Model.DecisionsAndCompletedTime));
+    var groupAssignmentSplit = @Html.Raw(Json.Serialize(Model.WREventsGroupAssignmentSplit));
+    var ageOfIncompleteTasks = @Html.Raw(Json.Serialize(Model.AgeOfIncompleteTasks));
+</script>
+<script src="~/js/charts.js" asp-append-version="true"></script>

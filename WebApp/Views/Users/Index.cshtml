@@ -1,0 +1,98 @@
+﻿@using WebApp.Controllers
+@using BusinessLayer.Helpers
+@model BusinessLayer.ViewModels.UsersIndexViewModel
+
+@{
+    ViewData["Title"] = "User Management - Home";
+}
+
+<h1>User Management</h1>
+<div class="container-fluid">
+    <div class="row">
+        @if (Model.SystemHasInactiveUsers)
+        {
+            <div class="col-10">
+                @if (!Model.Users.Any(e => e.IsLocked))
+                {
+                    <form asp-controller="Users" asp-action="Index" method="get">
+                        <div class="form-check-inline float-end text-center">
+                            <label class="form-check-label">
+                                <input type="radio" class="form-check-input me-1" name="viewInactive" value="true" onchange="javascript:this.form.submit()"/>View inactive users
+                            </label>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <form asp-controller="Users" asp-action="Index" method="get">
+                        <div class="form-check-inline float-end text-center">
+                            <label class="form-check-label">
+                                <input type="radio" class="form-check-input me-1" value="false" checked onclick="javascript:this.form.submit()"/>View inactive users
+                            </label>
+                        </div>
+                    </form>
+                }
+            </div>
+            <div class="col-2">
+                <div >
+                    <a class="btn btn-primary btn-xs-block float-end mb-3" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())" asp-action="@nameof(UsersController.ListNewLibraryUsers)">Add User from YTULib</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col">
+                <a class="btn btn-primary btn-xs-block float-end form-group" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())" asp-action="@nameof(UsersController.ListNewLibraryUsers)">Add User from YTULib</a>
+
+            </div>
+        }
+       
+    </div>
+    <div class="row">
+        <div class="col">
+            <table id="ytuTMTable" class=" table table-striped responsive table-hover nowrap table-medium table-theme-toggle" style="width:100%">
+                <thead class="thead">
+                    <tr>
+                        <th>Email</th>
+                        <th>ChaReq Role</th>
+                        <th class="no-sort"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Users.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                <a class="text-color-theme text-decoration-none" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())"
+                                   asp-action="@nameof(UsersController.EditUser)"
+                                   asp-route-userId="@Model.Users[i].UserId">
+                                    @Model.Users[i].Email
+                                </a>
+                            </td>
+                            <td>
+                                <span class="text-color-theme">@Model.Users[i].RoleAsString</span>
+                            </td>
+                            <td class="text-center">
+                                <a class="btn btn-primary" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())"
+                                   asp-action="@nameof(UsersController.EditUser)" asp-route-userId="@Model.Users[i].UserId">Edit</a>
+                                @if(!Model.Users[i].Email.Contains("-group"))
+                                {
+                                    @if (Model.Users[i].IsLocked)
+                                    {
+                                        <a class="btn btn-success" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())"
+                                           asp-action="@(nameof(UsersController.ToggleUserActivation))" asp-route-userId="@Model.Users[i].UserId">Activate</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-warning" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())"
+                                           asp-action="@nameof(UsersController.ToggleUserActivation)" asp-route-userId="@Model.Users[i].UserId">Deactivate</a>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

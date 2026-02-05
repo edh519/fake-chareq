@@ -1,0 +1,16 @@
+﻿@model BusinessLayer.ViewModels.LabelViewModel
+@using BusinessLayer.Helpers
+
+@* NOTE: Keep this up to date with `LabelHtml` in `WebApp\wwwroot\js\Pages\_WorkRequestLabelEditorPartial.js` *@
+
+
+<span 
+    class="badge rounded-pill m-1 font-size-1rem fw-normal shadow"
+      style="background-color:@Model.HexColor; color:@CommonHelpers.CalculateBestTextColor(@Model.HexColor); border:2px solid @Model.HexColor"
+      data-bs-toggle="tooltip" 
+    title="@Model.LabelDescription"
+    data-workRequestId="@Model.WorkRequestId"
+    data-labelId="@Model.LabelId"
+>
+    @Model.LabelShort
+</span>

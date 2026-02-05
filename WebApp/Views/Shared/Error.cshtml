@@ -1,0 +1,28 @@
+﻿@model BusinessLayer.ViewModels.ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="d-flex flex-md-column justify-content-center text-center" style="height: 80vh">
+    <div class="justify-content-center d-inline-flex">
+        <div class="d-inline-block me-2 mt-4">
+            <img style="width: 5em; height:15em" src="~/images/YTU logo.png" alt="YTU Logo" />
+        </div>
+
+        <div class="d-inline-block text-start ps-2">
+            <h1 style="font-size: 5rem;" class="fw-bold">Oops!</h1>
+            <h4 class="text-info fw-bold"><i class="far fa-frown me-3"></i>We're sorry but something went wrong.</h4>
+            <h5>An error occurred while processing your request.</h5>
+            <h5>The tech team have been notified. If the error persists, please contact us via: </h5>
+            <h5 class="fw-bold">ytu-techsupport-group@york.ac.uk</h5>
+
+            @if (Model.ShowRequestId)
+            {
+                <p>
+                    Request ID: <code id="errorCode">@Model.RequestId</code>
+                    <i class="fas fa-copy btn ps-1 btn-hover code-copy-icon" onclick="CopyErrorCode()" title="Copy this error code for your reference."></i>
+                </p>
+            }
+        </div>
+    </div>
+</div>

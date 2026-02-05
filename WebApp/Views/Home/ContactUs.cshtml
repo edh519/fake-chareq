@@ -1,0 +1,37 @@
+﻿@model BusinessLayer.ViewModels.ContactUsViewModel
+@{
+    ViewData["Title"] = "Contact Us";
+}
+@section Scripts {
+    <script asp-src-include="~/js/Pages/ContactUsHome.js" asp-append-version="true"></script>
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-md-9">
+
+            <form asp-action="ContactUs" method="post" enctype="multipart/form-data" role="form">
+                
+                <h4 class="fw-bold">@ViewBag.Title</h4>
+
+                <p class="lead">Our team is happy to take any questions or feedback from you.</p>
+                <p>Please submit your message below and we'll respond to you as quickly as we can.</p>
+
+                <div class="form-group">
+                    <label asp-for="Message">
+                        Message: <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-html="true" title=" This form should only be used for contacting the team. To submit a new request please use the 'Add New Request' tab"></i>
+                        <br />
+                    </label>
+                    <textarea asp-for="Message" class="form-control htmlForm" spellcheck="true" rows="15"></textarea>
+                    <span asp-validation-for="Message" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex align-items-end flex-row mt-3">
+                    <input id="ContactUsSubmit" type="submit" class="btn btn-primary my-auto" value="Submit Request" onclick="hideContactUsSubmit();" />
+                    <input id="fakeSubmitButton" type="button" class="btn btn-secondary my-auto" value="Submitting..." disabled style="display:none;"/>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

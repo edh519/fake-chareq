@@ -1,0 +1,112 @@
+﻿.daterangepicker {
+    background-color: var(--table-theme-bg);
+}
+
+    .daterangepicker .calendar-table {
+        background-color: var(--form-control-bg);
+    }
+
+    .daterangepicker .ranges {
+        background: var(--form-control-bg);
+    }
+
+        .daterangepicker .ranges li:hover {
+            background: var(--bg-color);
+        }
+
+    .daterangepicker .drp-buttons .btn {
+        color: var(--font-color);
+    }
+
+    .daterangepicker td.off, .daterangepicker td.off.in-range, .daterangepicker td.off.start-date, .daterangepicker td.off.end-date {
+        background-color: var(--bg-color);
+    }
+
+
+.sidebar {
+    position: relative;
+}
+
+.filter-active {
+    box-shadow: 0 0 0 2px #007bff;
+    border-radius: 5px;
+    background-color: var(--bg-color);
+}
+
+#changeRequestTable {
+    table-layout: auto;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+    #changeRequestTable td {
+        max-width: 200px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+/* Sidebar styling */
+.sidebar {
+    position: relative;
+}
+
+.side-panel {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    background-color: var(--side-panel-bg-color);
+    z-index: 1;
+}
+
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+}
+
+/* Button link and hover styles */
+.btn-link {
+    color: var(--hyperlink-default);
+}
+
+    .btn-link:hover {
+        color: var(--hyperlink-default);
+    }
+
+/* Accordion styles */
+.accordion .card-header button {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+    .accordion .card-header button::after {
+        content: "+";
+        position: absolute;
+        right: 0px;
+        font-size: 30px;
+        transition: transform 0.3s ease;
+    }
+
+    .accordion .card-header button[aria-expanded="true"]::after {
+        content: "-";
+        transform: rotate(180deg);
+    }
+
+.sidebar-toggle-inside {
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+.sidebar-toggle-floating {
+    position: fixed;
+    top: 25%;
+    left: 10px;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 1050;
+}
+

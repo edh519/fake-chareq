@@ -1,0 +1,81 @@
+﻿@using BusinessLayer.ViewModels;
+@model BusinessLayer.ViewModels.TriageInfoViewModel;
+
+@{
+    ViewData["Title"] = "Manage Triage Information";
+}
+
+<div class="row">
+    <h1 class="mb-5 fs-2">Triage Information</h1>
+</div>
+
+<div class="row">
+    <div class="col-sm-12 col-lg-6 col-xl-4">
+
+        <h2 class="fs-3">Triage Rota</h2>
+
+        <table class="table table-theme-toggle">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayNameFor(Model => Model.Rotas[0].Day)</th>
+                    <th>@Html.DisplayNameFor(Model => Model.Rotas[0].Morning)</th>
+                    <th>@Html.DisplayNameFor(Model => Model.Rotas[0].Afternoon)</th>
+                    <th>@Html.DisplayNameFor(Model => Model.Rotas[0].Reserve)</th>
+                    <th><span class="visually-hidden">Edit</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rota in Model.Rotas)
+                {
+                    <tr>
+                        <td>@rota.Day</td>
+                        <td>@rota.Morning</td>
+                        <td>@rota.Afternoon</td>
+                        <td>@rota.Reserve</td>
+                        <td><a class="btn btn-primary" asp-action="EditRota" asp-route-RotaId="@rota.TriageInfoRotaId">Edit</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p><small>If you know you are going to be off, send the person in Reserve a heads-up on slack please!</small></p>
+
+    </div>
+
+    <div class="col-sm-12 col-lg-6 col-xl-8">
+        <h2 class="fs-3">Request Attribution</h2>
+        <p>This lists which teams various requests may be associated with. Attribution can be set in <a asp-action="ManageTrials" asp-controller="Admin">Manage Trials</a></p>
+        
+        <div class="row">
+            <div class="col">
+                <h3 class="fs-4">RedCAP</h3>
+                <ul>
+                    @foreach(Trial trial in Model.REDCapTrials)
+                    {
+                        <li>@trial.TrialName</li>
+                    }
+                </ul>
+            </div>
+            <div class="col">
+                <h3 class="fs-4">DevTeam</h3>
+                <ul>
+                    @foreach (Trial trial in Model.DevelopmentTrials)
+                    {
+                        <li>@trial.TrialName</li>
+                    }
+                </ul>
+            </div>
+            @if (Model.NotAttributedTrials.Count > 0)
+            {
+                <div class="col">
+                    <h3 class="fs-4">Not Attributed</h3>
+                    <ul>
+                        @foreach (Trial trial in Model.NotAttributedTrials)
+                        {
+                            <li>@trial.TrialName</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+</div>

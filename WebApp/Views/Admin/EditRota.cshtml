@@ -1,0 +1,48 @@
+﻿@model BusinessLayer.ViewModels.TriageInfoRotaViewModel
+@using Enums.Enums;
+
+@{
+    ViewBag.Title = "Edit Rota";
+}
+
+<h1>Edit Rota</h1>
+
+<form asp-action="EditRota" asp-controller="Admin" method="post" enctype="multipart/form-data" role="form">
+    <div class="d-none">
+        <label class="col-form-label" asp-for="TriageInfoRotaId"></label>
+        <input class="form-control" asp-for="TriageInfoRotaId" readonly />
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="Day"></label>
+            <input class="form-control" asp-for="Day" readonly />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="Morning"></label>
+            <input class="form-control" asp-for="Morning" />
+            <span asp-validation-for="Morning" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="Afternoon"></label>
+            <input class="form-control" asp-for="Afternoon" />
+            <span asp-validation-for="Afternoon" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="Reserve"></label>
+            <input class="form-control" asp-for="Reserve" />
+            <span asp-validation-for="Reserve" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <button class="btn btn-primary float-end my-3" type="submit">Submit Changes</button>
+            <a class=" btn btn-secondary float-end my-3 me-3 pointerOnHover text-white" onclick="history.back()">Cancel</a>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,124 @@
+﻿.tox .tox-toolbar, .tox .tox-toolbar__overflow, .tox .tox-toolbar__primary {
+    background-color: var(--form-control-bg) !important;
+    border-color: var(--form-control-border-color) !important;
+}
+
+.tox .tox-statusbar {
+    background-color: var(--form-control-bg) !important;
+    border-color: var(--form-control-border-color) !important;
+}
+
+.tox-tinymce {
+    border-color: var(--form-control-border-color) !important;
+}
+
+.tox:not([dir=rtl]) .tox-toolbar__group:not(:last-of-type) {
+    border-color: var(--form-control-border-color) !important;
+}
+
+.tox .tox-tbtn svg {
+    fill: var(--font-color) !important;
+}
+
+.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before {
+    color: var(--font-color) !important;
+}
+
+.tox:not(.tox-tinymce-inline) .tox-editor-header {
+    background-color: var(--form-control-bg) !important;
+}
+
+.tox .tox-statusbar a, .tox .tox-statusbar__path-item, .tox .tox-statusbar__wordcount {
+    color: var(--font-color) !important;
+}
+
+.tox .tox-statusbar__branding svg {
+    fill: var(--font-color) !important;
+}
+
+.tox .tox-dialog__header {
+    background-color: var(--bg-color) !important;
+    color: var(--font-color) !important;
+}
+
+.tox .tox-dialog {
+    background-color: var(--bg-color) !important;
+}
+
+.tox .tox-dialog__footer {
+    background-color: var(--bg-color) !important;
+}
+
+.tox .tox-form__group--stretched .tox-textarea {
+    background-color: var(--bg-color) !important;
+    color: var(--font-color) !important;
+}
+
+.tox .tox-selectfield select {
+    background-color: var(--bg-color) !important;
+    color: var(--font-color) !important;
+}
+
+.tox .tox-dialog__body {
+    color: var(--font-color) !important;
+}
+
+.tox .tox-label, .tox .tox-toolbar-label {
+    color: var(--font-color) !important;
+}
+
+.tox-toolbar__overflow {
+    background-color: var(--navbar-bg-color) !important;
+}
+
+.tox .tox-tbtn {
+    background-color: var(--navbar-bg-color) !important;
+}
+
+.tox .tox-tbtn:hover {
+    background-color: var(--navbar-bg-color-hover) !important;
+}
+
+.tox .tox-tbtn:focus {
+    background: var(--navbar-bg-color-hover) !important;
+}
+
+.tox .tox-tbtn:focus-visible {
+    background: var(--navbar-bg-color-hover) !important;
+}
+
+
+.tox .tox-tbtn:active {
+    background-color: var(--navbar-bg-color-hover) !important;
+}
+
+.tox .tox-tbtn--enabled,
+.notice-color {
+    background-color: var(--navbar-bg-color-hover) !important;
+}
+
+
+.tox .tox-tbtn--bespoke {
+    background: var(--form-control-bg) !important;
+    color: var(--font-color) !important;
+}
+
+    .tox.tox-tbtn--bespoke:hover {
+        background-color: var(--navbar-bg-color-hover) !important;
+    }
+
+
+.tox:not([dir=rtl]) .tox-collection--list .tox-collection__item > .tox-collection__item-label > :is(strong, p, h1, h2, h3, h4, h5, h6, em, span, blockquote, div, pre, sub, sup, s) {
+    background: white !important;
+    color: black !important;
+    text-decoration-color: black !important;
+}
+
+.tox .tox-collection--list tox-menu-nav__js.tox-collection__item.tox-collection__item--active > .tox-collection__item-label > :is(strong, p, h1, h2, h3, h4, h5, h6, em, span, blockquote, div, pre, sub, sup, s) {
+    background-color: #cce2fa !important;
+}
+
+.tox:not([dir=rtl]) .tox-collection--list .tox-collection__item > .tox-collection__item-label > :is(code) {
+    background: #e8e8e8 !important;
+    color: black !important;
+}

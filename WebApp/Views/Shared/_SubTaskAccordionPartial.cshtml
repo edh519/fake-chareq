@@ -1,0 +1,300 @@
+﻿@using BusinessLayer.Helpers
+@using BusinessLayer.ViewModels
+@using Enums
+@using Enums.Enums
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@model BusinessLayer.ViewModels.SubTaskAccordionViewModel
+
+@{
+    ViewBag.Title = "Request Details";
+
+    var subTask = Model.SubTask;
+    DateTime lastUsedDate = DateTime.MinValue;
+    var collapseId = $"collapse-{subTask.SubTaskId}";
+    var headingId = $"heading-{subTask.SubTaskId}";
+    var subTaskEvents = Model.SubTaskEvents;
+    var currentUserEmail = _userManager.FindByNameAsync(User.Identity.Name).Result.NormalizedEmail;
+
+    // Variables used to determine visibility and state of various elements.
+    string isMyConvoPosition = "";
+    string isMyConvoBorder = "";
+    string headerBorderClass = "";
+
+    switch (subTask.Status.SubTaskStatusId)
+    {
+        case SubTaskStatusEnum.Approved:
+            headerBorderClass = "border-success";
+            break;
+        case SubTaskStatusEnum.Rejected:
+            headerBorderClass = "border-danger";
+            break;
+        case SubTaskStatusEnum.Open:
+            headerBorderClass = "border-primary";
+            break;
+        case SubTaskStatusEnum.Abandoned:
+            headerBorderClass = "border-secondary";
+            break;
+        default:
+            headerBorderClass = "border-dark";
+            break;
+    }
+}
+
+<div class="accordion" id="subTaskAccordion">
+   <div class="accordion-item mb-2 border border-3 rounded @headerBorderClass">
+        <h2 class="accordion-header bg-theme" id="@headingId">
+            <div>
+                <button class="accordion-button collapsed p-3 text-start w-100 bg-theme shadow-none focus-ring-0"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#@collapseId"
+                        aria-expanded="false"
+                        aria-controls="@collapseId"
+                        style="flex-direction: column; align-items: flex-start;">
+                    <div class="w-100 d-flex justify-content-between align-items-center text-truncate">
+                        <strong class="fs-6 text-color-theme-important">@subTask.SubTaskTitle</strong>
+                        <small class="m-2 text-color-theme-important"><i>Sub Task</i></small>
+                    </div>
+
+                </button>
+
+                <div class="px-3 pb-3 pt-1">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap" style="font-size: 0.85rem;">
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-items-center">
+                                <span>Assignee:</span>
+                                <span class="badge rounded-pill fw-normal text-color-theme-important ms-2 border border-secondary"
+                                      style="font-size: 0.85rem;"
+                                      data-bs-toggle="tooltip"
+                                      title="@subTask.Assignee.Email"
+                                      data-workRequestId="@subTask.WorkRequestId"
+                                      data-userEmail="@subTask.Assignee.Email">
+                                    <i class="fas fa-user-circle pe-1"></i>
+                                    @CommonHelpers.RemoveDomainFromEmail(subTask.Assignee.Email)
+                                </span>
+                                @if (!Model.IsLoggedInUserOfRoleTypeUser || Model.SubTask.CreatedBy.ToUpperInvariant() == currentUserEmail)
+                                {
+
+                                    <a class="card-link ms-2"
+                                    data-bs-toggle="collapse"
+                                    href="#editSubTaskAssigneeWrapper-@subTask.SubTaskId"
+                                    role="button"
+                                    aria-expanded="false"
+                                    aria-controls="editSubTaskAssigneeWrapper-@subTask.SubTaskId">
+                                        <i class="fa fa-wrench text-muted"
+                                        data-bs-toggle="tooltip"
+                                        title="Edit SubTask Assignee"
+                                        style="font-size: 0.9rem;"></i>
+                                    </a>
+                                }
+                            </div>
+
+                            <div class="collapse mt-2" id="editSubTaskAssigneeWrapper-@subTask.SubTaskId">
+                                <div class="input-group input-group-sm w-75">
+                                    <select class="form-control form-control-sm"
+                                            id="subTaskAssigneeSelect-@subTask.SubTaskId"
+                                            style="font-size: 0.85rem;">
+                                        @foreach (var user in Model.AssignableUsers)
+                                        {
+                                            if (user.Email == Model.SubTask.Assignee.Email) continue;
+
+                                            <option value="@user.Email" selected="@(user.Email == subTask.Assignee.Email)">
+                                                @CommonHelpers.RemoveDomainFromEmail(user.Email)
+                                            </option>
+                                        }
+                                    </select>
+                                    <button class="btn btn-primary btn-sm"
+                                            type="button"
+                                            onclick="UpdateSubTaskAssignee(
+                                                @subTask.SubTaskId,
+                                                document.getElementById('subTaskAssigneeSelect-@subTask.SubTaskId').value,
+                                                this)">
+                                        Update
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-muted-theme-toggle mt-2 mt-sm-0" style="font-size: 0.85rem; white-space: nowrap;"
+                             data-bs-toggle="tooltip"
+                             data-email="@subTask.CreatedBy"
+                             title="Created by: @subTask.CreatedBy | @subTask.CreationDateTime.ToString("HH:mm")">
+                            @CommonHelpers.RemoveDomainFromEmail(subTask.CreatedBy)
+                            | @subTask.CreationDateTime.ToShortTimeString()
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </h2>
+            <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#subTaskAccordion">
+                <div class="accordion-body subtask-bg">
+                    @foreach (SubTaskEventViewModel subTaskEvent in subTaskEvents)
+                    {
+                        @if (subTaskEvent.CreatedAt.Date != lastUsedDate.Date)
+                        {
+                            <div class="row text-center text-muted-theme-toggle">
+                                <div class="col"><hr /></div>
+                                <div class="col-auto">
+                                    <span class="badge rounded-pill font-italic text-muted-theme-toggle">
+                                        @subTaskEvent.CreatedAt.ToString("dddd d MMMM yyyy")
+                                    </span>
+                                </div>
+                                <div class="col"><hr /></div>
+                            </div>
+
+                            lastUsedDate = subTaskEvent.CreatedAt;
+                        }
+                        @if (subTaskEvent.SubTaskEventType == SubTaskEventTypeEnum.Assignment)
+                        {
+                            <div class="pb-1">
+                                <p class="font-italic mx-4">@Html.Raw(subTaskEvent.Content)</p>
+                            </div>
+                        }
+                        else
+                        {
+                            lastUsedDate = subTaskEvent.CreatedAt;
+
+                        if (currentUserEmail == subTaskEvent.CreatedByEmail.ToUpperInvariant())
+                            {
+                                isMyConvoPosition = "offset-2";
+                                isMyConvoBorder = "convo-box-me";
+                            }
+                            else
+                            {
+                                isMyConvoPosition = "";
+                                isMyConvoBorder = "convo-box-you";
+                            }
+
+                            string conversationTypeBorder = "border-primary";
+                            if (subTaskEvent.SubTaskEventType == SubTaskEventTypeEnum.Approve)
+                            {
+                                conversationTypeBorder = "border-success";
+                            }
+                            else if (subTaskEvent.SubTaskEventType == SubTaskEventTypeEnum.Reject)
+                            {
+                                conversationTypeBorder = "border-danger";
+                            }
+                            else if (subTaskEvent.SubTaskEventType == SubTaskEventTypeEnum.Abandon)
+                            {
+                                conversationTypeBorder = "border-secondary";
+                            }
+
+                            <div class="row">
+                                <div class="col-10 @isMyConvoPosition">
+                                <div class="alert @conversationTypeBorder @isMyConvoBorder pb-4 chareq-message-box">
+                                            @if (subTaskEvent.SubTaskEventType != SubTaskEventTypeEnum.None)
+                                            {
+                                                <p class="alert-heading text-muted-theme-toggle">
+                                                    <span><i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+                                                    @if (EnumHelpers.GetDisplayName(subTaskEvent.SubTaskEventType) == "Approve")
+                                                    {
+                                                        <span>Approved</span>
+                                                    }
+                                                    else if (EnumHelpers.GetDisplayName(subTaskEvent.SubTaskEventType) == "Reject")
+                                                    {
+                                                        <span>Rejected</span>
+                                                    }
+                                            else if (EnumHelpers.GetDisplayName(subTaskEvent.SubTaskEventType) == "Closed as Not Planned")
+                                                    {
+                                                        <span>Closed as not planned</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        EnumHelpers.GetDisplayName(subTaskEvent.SubTaskEventType);
+                                                    }
+                                                </p>
+                                            }
+                                            <p>@Html.Raw(subTaskEvent.Content)</p> @*Careful Raw html*@
+                                <small class="float-end text-muted-theme-toggle cursor-pointer"
+                                        data-bs-toggle="tooltip"
+                                        data-email="@subTaskEvent.CreatedByEmail"
+                                        onclick="copyEmailToClipboard(this)"
+                                        title="@subTaskEvent.CreatedByEmail | @subTaskEvent.CreatedAt.ToString("HH:mm dd/MM/yyyy")">
+                                    @BusinessLayer.Helpers.CommonHelpers.RemoveDomainFromEmail(subTaskEvent.CreatedByEmail)
+                                    | @subTaskEvent.CreatedAt.ToShortTimeString()
+                                    </small>
+                                </div>
+                                </div>
+                            </div>
+                            }
+                        }
+                    @if (subTask.Status.SubTaskStatusId == SubTaskStatusEnum.Open)
+                    {
+                        <form asp-action="CreateSubTaskEvent" method="post" enctype="multipart/form-data">
+
+
+                            <input type="hidden" asp-for="NewSubTaskEvent.SubTask.SubTaskId" value="@subTask.SubTaskId" />
+                        <input type="hidden" asp-for="NewSubTaskEvent.SubTask.WorkRequestId" value="@subTask.WorkRequestId" />
+
+
+                            <hr class="my-3" />
+
+                            <div class="row">
+                                <div class="col-12">
+                                <textarea id="eventTextEntry_@subTask.SubTaskId"
+                                          class="form-control htmlForm subTaskTextBox"
+                                          data-ytu-id="@subTask.SubTaskId"
+                                          spellcheck="true"
+                                          placeholder="Type a message..."
+                                          required=required
+                                          rows="5"
+                                          asp-for="NewSubTaskEvent.Content">
+                                            </textarea>
+                                </div>
+                            </div>
+
+                            @{
+                                string currentUserEmail = User.FindFirstValue(ClaimTypes.Email)?.ToLower();
+                                string assignedUserEmail = subTask.Assignee?.Email?.ToLower();
+                            }
+
+                            <div class="row">
+                            <div class="col-8">
+                                </div>
+                                <div class="col-4 d-flex justify-content-end">
+                                    <span class="input-group my-1">
+                                    <label for="eventTypeSelect_@subTask.SubTaskId" class="visually-hidden">Event type</label>
+                                    <select id="eventTypeSelect_@subTask.SubTaskId" class="form-control" asp-for="NewSubTaskEvent.EventType.SubTaskEventTypeId" onchange="EmptyDescriptionCheck(@subTask.SubTaskId)" required>
+                                            <option selected disabled>Select Type</option>
+                                            @foreach (SubTaskEventTypeEnum type in Enum.GetValues(typeof(SubTaskEventTypeEnum)))
+                                            {
+                                                bool isApproveOrReject = type == SubTaskEventTypeEnum.Approve || type == SubTaskEventTypeEnum.Reject;
+
+                                                // do not show the assignment event type at all, and only show the approve/reject event type if the current user is assigned
+                                                if (type == SubTaskEventTypeEnum.Assignment || (isApproveOrReject && currentUserEmail != assignedUserEmail))
+                                                {
+                                                    continue;
+                                                }
+
+                                                <option value="@((int)type)">@EnumHelpers.GetDisplayName(type)</option>
+                                            }
+                                        </select>
+                                    <span id="textboxButtonWrapper_@subTask.SubTaskId"
+                                              data-bs-toggle="tooltip"
+                                              title="Message content cannot be empty"
+                                              style="display:inline-block;">
+                                        <button id="textboxButton_@subTask.SubTaskId"
+                                                    class="btn btn-primary text-white"
+                                                    type="submit"
+                                                    role="button" disabled>
+                                                Add
+                                            </button>
+                                        </span>
+                                </span>
+                            </div>
+                        </div>
+
+                            <div class="col">
+                                <span id="subTaskEmptyMessageValidationWarning_@subTask.SubTaskId" class="float-end text-danger d-none">Message content cannot be empty</span>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+</div>
+
+<link rel="stylesheet" href="~/css/sub-task-accordion-partial.css">

@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model BusinessLayer.ViewModels.SubscribeOtherUsersViewModel;
+@inject UserManager<ApplicationUser> _userManager
+
+<form asp-action="SubscribeMultipleUsersToRequest" asp-controller="WorkRequest" id="subscribeOtherUserForm" method="post">
+    <input type="hidden" asp-for="WorkRequestId" value="@Model.WorkRequestId" />
+    <input type="hidden" asp-for="CurrentUserId" value="@_userManager.GetUserAsync(User).Result.Id" />
+
+    <div class="modal fade" id="subscribeOtherUserModal" tabindex="-1" aria-labelledby="subscribeOtherUserLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="margin-top: 100px;">
+            <div class="modal-content bg-theme">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="subscribeOtherUserLabel">Choose users to subscribe to this work request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <partial name="_ValidationScriptsPartial" />
+                <validation-summary class="text-danger" asp-validation-summary="ModelOnly"></validation-summary>
+
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label for="SubscribableUsersMultiSelect">Which users?</label>
+                        <select asp-for="UsersToBeSubscribed" id="SubscribableUsersMultiSelect" class="form-control" asp-items="@(new SelectList(Model.SubscribableUsers, "UserId", "Email"))" multiple="multiple"></select>
+
+                        <span asp-validation-for="UsersToBeSubscribed" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" onclick="ShowSubscriberSpinner(this)" class="btn btn-primary">Submit</button>
+                </div>
+                <div id="subscriberSpinner" style="display:none">
+                    <div style="width:100%; display:flex;">
+                        <h5 style="margin: auto; padding: 5px;" id="spinnerText">Subscribing users...</h5>
+                    </div>
+                    <div style="width:100%; display:flex; padding: 20px">
+                        <div class="spinner-border text-primary" style="margin: auto; padding: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

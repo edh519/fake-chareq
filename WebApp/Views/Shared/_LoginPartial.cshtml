@@ -1,0 +1,98 @@
+﻿@using WebApp.Controllers
+@using BusinessLayer.Helpers
+@using DataAccessLayer.Models
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var userName = currentUser is {} user ? CommonHelpers.RemoveDomainFromEmail(user.Email) : "unknown";
+}
+@if (SignInManager.IsSignedIn(User))
+{
+    <nav class="navbar navbar-expand-xl sticky-top rounded-bottom padding-x-2-5vw navbar-bg">
+        <a class="navbar-brand active text-color-theme-important" asp-controller="Home" asp-action="Index">
+            <h5 class="fw-bold d-inline">Cha</h5><h5 class="d-inline">Req</h5>
+            <environment include="Staging, Development, Training">
+                <h5 class="bg-danger text-center text-white p-lg-2  d-inline ">@Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")</h5>
+            </environment>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                @if (User.IsInRole("User") || User.IsInRole("Authoriser"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important" asp-controller="WorkRequest" asp-action="CreateWorkRequest">Add New Request</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important" asp-controller="ViewAllWorkRequests" asp-action="Index">View All Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important" 
+                           asp-controller="@(ControllerHelpers.GetControllerName<SubscriptionsController>())" 
+                           asp-action="@nameof(SubscriptionsController.Index)">Manage Subscriptions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important"
+                           asp-controller="@(ControllerHelpers.GetControllerName<ViewAllSubTasksController>())"
+                           asp-action="@nameof(ViewAllSubTasksController.Index)">View All Sub Tasks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important"
+                           asp-controller="@(ControllerHelpers.GetControllerName<DataExportController>())"
+                           asp-action="@nameof(DataExportController.Index)">Data Exports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-color-theme-important"
+                            asp-controller="@(ControllerHelpers.GetControllerName<HomeController>())"
+                            asp-action="@nameof(HomeController.ContactUs)">Contact Us</a>
+                    </li>
+                }
+
+
+            </ul>
+
+            <ul class="navbar-nav ms-auto">                
+                <li class="nav-item">
+                    <partial name="_ThemeToggleSwitchPartial" />
+                </li>
+                @if (User.IsInRole("Authoriser"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-color-theme-important" href="#" id="navbardrop" data-bs-toggle="dropdown">
+                            Admin
+                        </a>
+                        <div class="dropdown-menu navbar-dropdown-bg-important">
+                            <a class="dropdown-item text-color-theme-important" asp-controller=@(ControllerHelpers.GetControllerName<UsersController>()) asp-action=@nameof(UsersController.Index)>Users</a>
+                            <a class="dropdown-item text-color-theme-important" asp-controller=@(ControllerHelpers.GetControllerName<AdminController>()) asp-action=@nameof(AdminController.ManageLabels)>Manage Labels</a>
+                            <a class="dropdown-item text-color-theme-important" asp-controller=@(ControllerHelpers.GetControllerName<AdminController>()) asp-action=@nameof(AdminController.ManageTrials)>Manage Trials</a>
+                            <a class="dropdown-item text-color-theme-important" asp-controller=@(ControllerHelpers.GetControllerName<AdminController>()) asp-action=@nameof(AdminController.TriageInfo)>Manage Triage Information</a>
+
+                            @if (User.IsInRole("Developer"))
+                            {
+                                <a class="dropdown-item text-color-theme-important" asp-controller="@(ControllerHelpers.GetControllerName<ContactUsController>())" asp-action="@nameof(ContactUsController.Index)">Contact Us Submissions</a>
+                            }
+                        </div>
+                    </li>
+                }
+                <li class="nav-item ">
+                    <span id="username" class="nav-link text-dark fw-bold support-blue-colour" title="Support">
+                        <a class="text-decoration-none" asp-controller=@(ControllerHelpers.GetControllerName<HomeController>()) asp-action=@nameof(HomeController.Support)><i class="fas fa-user-circle"></i> @userName</a>
+                    </span>
+                </li>
+                <li class="nav-item ">
+                    <form id="logoutForm" class="" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button id="logout" type="submit" class="nav-link btn btn-link text-color-theme-important">
+                            Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+}

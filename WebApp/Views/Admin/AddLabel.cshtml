@@ -1,0 +1,52 @@
+﻿@model BusinessLayer.ViewModels.LabelViewModel
+
+@{
+    ViewBag.Title = "Add New Label";
+}
+
+@section Scripts{
+    <script type="text/javascript" src="~/js/Pages/ManageLabels.js" asp-append-version="true"></script>
+}
+
+
+    <h1>Add New Label</h1>
+    <form asp-action="AddLabel" asp-controller="Admin" method="post" enctype="multipart/form-data" role="form">
+        <div class="row">
+            <div class="col-md-4">
+                <label class="col-form-label" asp-for="LabelShort"></label> <i class="text-muted-theme-toggle">(25 characters max)</i>
+                <input class="form-control" asp-for="LabelShort" onkeyup="updatePreview()" />
+                <span asp-validation-for="LabelShort" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label class="col-form-label" asp-for="LabelDescription"></label> <i class="text-muted-theme-toggle">(50 characters max)</i>
+                <input class="form-control" asp-for="LabelDescription" onkeyup="updatePreview()" />
+                <span asp-validation-for="LabelDescription" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <label class="col-form-label" asp-for="HexColor"></label>
+                <input class="form-control" asp-for="HexColor" type="color" onchange="updatePreview()" />
+            </div>
+            <div class="col-md-10 p-4">
+            <div class="form-group">
+    <a class="btn btn-info pointerOnHover text-white" 
+       onclick="shuffleHexColor()" 
+       data-bs-toggle="tooltip" 
+       title="Shuffle colour and preview">
+       <i class="fas fa-random"></i>
+    </a>
+
+    <span id="labelPreview" class="badge rounded-pill ms-3 font-size-1rem fw-normal shadow"></span>
+</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-primary float-end my-3" type="submit">Add New Label</button>
+                <a class=" btn btn-secondary float-end my-3 me-3 pointerOnHover text-white" onclick="history.back()">Cancel</a>
+            </div>
+        </div>
+    </form>

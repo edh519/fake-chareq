@@ -1,0 +1,97 @@
+﻿@using Octokit
+@model BusinessLayer.ViewModels.GitHubViewModel
+
+<div class="card-header">
+    <b>GitHub</b>
+    @if (Model.Issue is not null && Model.TrialRepositoryInfos?.FirstOrDefault(e=> e.Id == Model.RepositoryId) is {} repo)
+    {
+        <a href="@repo.HtmlUrl" target="_blank"><i><p class="card-text">(@repo.Name)</p></i></a>
+    }
+</div>
+
+<div class="card-body">
+    @if (!String.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <i class="card-text text-muted-theme-toggle">@Model.ErrorMessage</i>
+    }
+    else if (!Model.TrialRepositoryInfos.Any())
+    {
+        <i class="card-text text-muted-theme-toggle">Repository id not configured, unable to load GitHub information.</i>
+    }
+    else
+    {
+        @if (Model.Issue is not null)
+        {
+            <h5 class="card-title">Issue Status</h5>
+            <p class="card-text">
+                @if (Model.Issue.State == ItemState.Open)
+                {
+                    <div>
+                        Open <i class="far fa-dot-circle"></i>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        Closed <i class="far fa-check-circle"></i>
+                    </div>
+                }
+            </p>
+            <a class="card-link" target=”_blank” href="@Model.Issue.HtmlUrl">View Issue</a>
+
+            <a class="card-link float-end" data-bs-toggle="collapse" href="#editExistingIssueWrapper" role="button" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-wrench" data-bs-toggle="tooltip" title="Edit Linked Issue"></i><span class="visually-hidden">Edit Linked Issue</span></a>
+            <span class="collapse input-group mt-1" id="editExistingIssueWrapper">
+                <label for="editIssueInput" class="visually-hidden">Issue URL or ID</label>
+                <input class="form-control validate" id="editIssueInput" placeholder="Issue URL or Id" type=text pattern="^(https:\/\/github.com\/uoy-trials\/)+\S+(\/issues\/)+\d+$|^\d+$" required value="@Model.Issue.Number" />
+                <span class="input-group-append">
+                    <button class="btn btn-primary input-group-append" onclick="UpdateGithubIssue(@Model.WorkRequestId,@Model.RepositoryId, $('#editIssueInput').val())">Update</button>
+                </span>
+                <button class="btn btn-danger mt-3" data-request-url="@Url.Action("ResetGitHubInfo", "WorkRequest")" data-workrequestid="@Model.WorkRequestId" onclick="ResetGitHubInfo(this)">Reset GitHub Information</button>
+            </span>
+        }
+        else
+        {
+            @if (Model.TrialRepositoryInfos.Count < 2)
+            {
+                <div id="spinner" class="github-btn">
+                    <div style="width:100%; display:flex;">
+                        <h3 style="margin: auto; padding: 25px;" id="spinnerText">Fetching data...</h3>
+                    </div>
+                    <div style="width:100%; display:flex;">
+                        <div class="spinner-border text-primary" style="margin: auto; padding: 25px;"></div>
+                    </div>
+                </div>
+                <a class="btn btn-primary text-white mt-1 pointerOnHover" onclick="CreateIssueForWorkRequest(this)" data-request-url="@Url.Action("CreateGitHubIssue", "WorkRequest")" data-workrequestid="@Model.WorkRequestId" data-repositoryid="@Model.TrialRepositoryInfos.First().Id">Create Issue</a>
+
+                <a class="btn btn-secondary text-white mt-1" data-bs-toggle="collapse" href="#addExistingIssueWrapper" role="button" aria-expanded="false" aria-controls="collapseExample">Add Existing Issue</a>
+                <span class="collapse input-group mt-1" id="addExistingIssueWrapper">
+                    <input class="form-control validate" id="addIssueInput" placeholder="Issue URL or Id" type=text pattern="^(https:\/\/github.com\/uoy-trials\/)+\S+(\/issues\/)+\d+$|^\d+$" required />
+                    <span class="input-group-append">
+                        <button class="btn btn-primary input-group-append" onclick="UpdateGithubIssue(@Model.WorkRequestId,@Model.TrialRepositoryInfos.First().Id, $('#addIssueInput').val())">Add</button>
+                    </span>
+                </span>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label for="trialGitHubInfoSelect">Select GitHub Repository</label>
+                    <select class="form-control" id="trialGitHubInfoSelect">
+                        @foreach (var info in Model.TrialRepositoryInfos)
+                        {
+                            <option value="@info.Id">@info.Name</option>
+                        }
+                    </select>
+                </div>
+                <a class="btn btn-primary text-white mt-1 pointerOnHover" onclick="CreateIssueForWorkRequest(this)" data-request-url="@Url.Action("CreateGitHubIssue", "WorkRequest")" data-workrequestid="@Model.WorkRequestId">Create Issue</a>
+
+                <a class="btn btn-secondary text-white mt-1" data-bs-toggle="collapse" href="#addExistingIssueWrapper" role="button" aria-expanded="false" aria-controls="collapseExample">Add Existing Issue</a>
+                <span class="collapse input-group mt-1" id="addExistingIssueWrapper">
+                    <input class="form-control validate" id="addIssueInput" placeholder="Issue URL or Id" type=text pattern="^(https:\/\/github.com\/uoy-trials\/)+\S+(\/issues\/)+\d+$|^\d+$" required />
+                    <span class="input-group-append">
+                        <button class="btn btn-primary input-group-append" onclick="UpdateGithubIssue(@Model.WorkRequestId, null, $('#addIssueInput').val())">Add</button>
+                    </span>
+                </span>
+            }
+        }
+    }
+</div>

@@ -1,0 +1,157 @@
+﻿<div id="drop-zone">
+    @* <input type="file" id="file-input" name="uploadedFiles" multiple hidden /> *@
+    <label for="actual-btn" class="visually-hidden">
+        Upload files
+    </label>
+    <input type="file" id="actual-btn" name="SupportingFiles" multiple hidden />
+    <p>Drag & drop files or click to select files</p>
+</div>
+<ul id="file-list"></ul>
+
+<style>
+    #drop-zone {
+        border: 2px dashed var(--form-control-border-color);
+        border-radius: 10px;
+        padding: 2rem;
+        background-color: var(--table-theme-bg);
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+
+        #drop-zone.drag-over {
+            border-color: #86b7fe; /* Copied from bootstrap library/form-control */
+            background-color: var(--table-theme-hover-bg);
+        }
+
+        #drop-zone.drag-over > p {
+            color: var(--text-muted-color);
+        }
+
+    #file-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 1rem;
+    }
+
+        #file-list li {
+            padding-top: 0.5rem;
+        }
+</style>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('actual-btn');
+        const fileList = document.getElementById('file-list');
+
+        const dt = new DataTransfer();
+
+        function addToMasterList(files) {
+            for (let i = 0; i < files.length; i++) {
+                dt.items.add(files[i]);
+            }
+
+            syncFiles();
+        }
+
+        function syncFiles(){
+            fileInput.files = dt.files;
+
+            updateFileListDisplay();
+        }
+
+        function updateFileListDisplay() {
+            // Clear display for re-rendering
+            fileList.innerHTML = '';
+
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const listItem = document.createElement('li');
+
+                    listItem.setAttribute('data-file-index', i);
+
+                    const fileInfo = document.createElement('span');
+                    //file.size is in bytes. "/1024/1024" to convert value to MB!
+                    listItem.textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
+                    // Add delete icon
+                    const deleteButton = document.createElement('a');
+                    deleteButton.className = "btn pointerOnHover text-danger";
+                    deleteButton.setAttribute('data-bs-toggle', 'tooltip');
+                    deleteButton.setAttribute('data-bs-placement', 'right');
+                    deleteButton.setAttribute('title', `Remove ${file.name}`);
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+
+                    //delete event listener
+                    deleteButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        removeFile(i);
+                    });
+
+                    //re-render list
+                    listItem.appendChild(deleteButton);
+                    listItem.appendChild(fileInfo);
+                    fileList.appendChild(listItem);
+                }
+            }
+        }
+
+        function removeFile(index) {
+            //cannot remove from DataTransfer directly. Create a new dt, copy everything (except removed), replace master list
+            const newDt = new DataTransfer();
+
+            //iterate over files, copy over unless it's index is one being removed
+            for (let i = 0; i < dt.files.length; i++) {
+                if (i !== index) {
+                    newDt.items.add(dt.files[i]);
+                }
+            }
+
+            dt.items.clear();
+            for(let i = 0; i < newDt.files.length; i++) {
+                dt.items.add(newDt.files[i]);
+            }
+
+            syncFiles();
+        }
+
+        // CLICK on hiden input (simulated)
+        fileInput.addEventListener('change', (e) => {
+            // Append new files to any existing
+            if (e.target.files.length > 0) {
+                addToMasterList(e.target.files);
+            }
+        });
+        // DRAG & DROP on input box
+        dropZone.addEventListener('drop', (e) => {
+            const droppedFiles = e.dataTransfer.files;
+            addToMasterList(droppedFiles);
+        }, false);
+        // CLICK on input box
+        dropZone.addEventListener('click', () => {
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        // Prevent default drag behavior
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Add/Remove styling class
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+    });
+
+</script>

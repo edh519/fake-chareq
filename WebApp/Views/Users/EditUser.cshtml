@@ -1,0 +1,59 @@
+﻿@using WebApp.Controllers
+@using BusinessLayer.Helpers
+@model BusinessLayer.ViewModels.UserSimpleViewModel
+
+
+@{
+    ViewData["Title"] = "User Management - Edit User";
+    bool userIdDeveloper = User.IsInRole("Developer");
+    if (!userIdDeveloper)
+    {
+        Model.Roles = Model.Roles.Where(r => r.Text != "Developer").ToList();
+    }
+}
+
+<h1>Edit User</h1>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="@nameof(UsersController.EditUser)">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input asp-for="Username" type="hidden" />
+                <input asp-for="UserId" type="hidden" />
+
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FirstName" class="control-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FullName" class="control-label"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RoleAsString" class="control-label"></label>
+                <select asp-for="RoleId" asp-items="@Model.Roles" class="form-control">
+                </select>
+                <span asp-validation-for="RoleAsString" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <a asp-action="@nameof(UsersController.Index)" class="btn btn-secondary"><i class="fas fa-chevron-left"></i> Back to Users</a>
+                <input type="submit" value="Save" class="btn btn-primary float-end" />
+            </div>
+        </form>
+    </div>
+    <div class="col-md-8 px-md-5">
+        <h5>User Roles</h5>
+        <p><b>User</b> has access to view requests and create new ones.</p>
+        <p><b>Authoriser</b> also has access to fill out the authorisations and assign users and labels to requests. They can also manage Labels, Trials and Users through the admin pages.</p>
+    </div>
+</div>
+
+

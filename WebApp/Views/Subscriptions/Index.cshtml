@@ -1,0 +1,110 @@
+﻿@using BusinessLayer.ViewModels.Subscriptions
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BusinessLayer.Helpers
+@using WebApp.Controllers
+@model BusinessLayer.ViewModels.Subscriptions.SubscriptionsIndexViewModel
+@{
+    ViewData["Title"] = "Subscriptions";
+
+    string queryParam = Context.Request.Query["showClosedWorkRequests"];
+    bool showClosedWorkRequests = bool.TryParse(queryParam, out bool parsed) && parsed;
+    string pageHeader = showClosedWorkRequests ? "All Work Requests" : "Open Work Requests";
+}
+@section Scripts {
+    <script type="text/javascript" src="~/js/Pages/Subscriptions.js" asp-append-version="true"></script>
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0">Subscriptions - @pageHeader</h4>
+
+    @if (showClosedWorkRequests)
+    {
+        <a class="btn btn-primary" asp-action="Index" asp-route-showClosedWorkRequests="false">
+            View Open Work Requests Only
+        </a>
+    }
+    else
+    {
+        <a class="btn btn-primary" asp-action="Index" asp-route-showClosedWorkRequests="true">
+            View All Work Requests
+        </a>
+    }
+</div>
+<div class="mb-3">
+<p class="small mb-0">
+    Subscriptions allow you to receive email notifications whenever a work request is updated.<br> This includes approvals, requested changes, messages and finalisations.
+</p>
+</div>
+@if (Model?.UserSubscriptions is not { } subs || !subs.Any())
+{
+    <div class="bg-jumbotron p-4">
+        You are not subscribed to any work requests.
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <form asp-action="Index">
+                <table class="w-100 table table-hover table-theme-toggle" id="user-subscriptions">
+                    <thead>
+                        <tr>
+                            <th class="text-start">
+                                Trial Name
+                            </th>
+                            <th class="text-start">
+                                Request
+                            </th>
+                            <th class="text-start">
+                                @Html.DisplayNameFor(model => model.UserSubscriptions.FirstOrDefault().WorkRequest.Status)
+                            </th>
+                            <th class="text-start">
+                                Created Date
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (WorkRequestSubscription sub in Model.UserSubscriptions)
+                        {
+                            <tr class="clickable-row"
+                                data-url="@Url.Action(nameof(WorkRequestController.WorkRequestDetails), ControllerHelpers.GetControllerName<WorkRequestController>(), new { workRequestId = sub.WorkRequest.WorkRequestId })">
+                                <td class="text-start">
+                                    <a>
+                                        @(@sub.WorkRequest.TrialOther ?? @sub.WorkRequest.Trial.TrialName)
+                                    </a>
+                                </td>
+                                <td class="w-50">
+                                    <span class="accessible-blue-text">
+                                        @sub.WorkRequest.Reference
+                                    </span>
+                                </td>
+                                <td>
+                                    @sub.WorkRequest.Status.WorkRequestStatusName
+                                </td>
+                                <td class="text-start">
+                                    <span class="created-time"
+                                          data-datetime="@sub.WorkRequest.CreationDateTime.ToString("o")">
+                                        <span style="display:none;">
+                                            @sub.WorkRequest.CreationDateTime.Ticks
+                                        </span>
+                                    </span>
+
+
+                                </td>
+                                <td>
+                                    <input type="submit" value="Unsubscribe" asp-route-workRequestId="@sub.WorkRequest.WorkRequestId" class="btn btn-sm btn-warning float-end" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="mt-3">
+                    <input asp-for="@Model.UserId" type="hidden" />
+                    <p>If you wish to unsubscribe from all work requests click the button below.</p>
+                    <input type="submit" value="Unsubscribe all" class="btn btn-primary float-end" />
+                </div>
+            </form>
+        </div>
+    </div>
+}

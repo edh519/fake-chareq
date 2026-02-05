@@ -1,0 +1,27 @@
+name: .NET_Build_Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 8.0.x
+    - name: Add uoy-trials as nuget package source
+      run: dotnet nuget add source https://nuget.pkg.github.com/uoy-trials/index.json --username ${{ secrets.UOY_TRIALS_NUGET_USERNAME }} --password ${{ secrets.UOY_TRIALS_NUGET_PASSWORD }} --name github --store-password-in-clear-text
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal

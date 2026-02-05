@@ -1,0 +1,50 @@
+﻿@using WebApp.Controllers
+@using BusinessLayer.Helpers
+@using DataAccessLayer.Models
+@using YTULib.Models
+@model List<SystemsUser>
+
+@{
+    ViewData["Title"] = "Library Users";
+}
+<h4 class="fw-bold">Available Library Users</h4>
+@if (Model.Count() == 0)
+{
+    <div>You've either added all the users or there's no one in the library. 🤷‍♀️🤷‍♂️</div>
+}
+else
+{
+
+    <p>A list of users from the YTU Library which can be added to ChaReq.</p>
+    <table id="ytuTMTable" class="table table-striped responsive nowrap w-100 table-theme-toggle">
+        <thead>
+            <tr>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Username
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="text-color-theme">@Html.DisplayFor(modelItem => item.Email)</span>
+                    </td>
+                    <td>
+                        <span class="text-color-theme">@Html.DisplayFor(modelItem => item.Username)</span>
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-primary" asp-controller="@(ControllerHelpers.GetControllerName<UsersController>())"
+                           asp-action="@nameof(UsersController.AddNewUserFromLibrary)"
+                           asp-route-id="@item.Id">Add to ChaReq</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

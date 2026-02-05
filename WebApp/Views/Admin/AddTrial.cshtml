@@ -1,0 +1,59 @@
+﻿@using BusinessLayer.Helpers
+@using BusinessLayer.ViewModels
+@using Enums.Enums
+@using WebApp.Controllers
+@model BusinessLayer.ViewModels.TrialViewModel
+
+@{
+    ViewBag.Title = "Add New Trial";
+    string queryParam = Context.Request.Query["showActiveTrials"];
+    bool? showActiveTrials = string.IsNullOrWhiteSpace(queryParam) ? null : Boolean.Parse(queryParam);
+}
+
+@section Scripts{
+ 
+}
+
+<h1>Add New Trial</h1>
+<form asp-action="AddTrial" asp-controller="Admin" method="post" enctype="multipart/form-data" role="form">
+    <div class="row">
+        <div class="col-md-4">
+            <label class="col-form-label" asp-for="TrialName"></label>
+            <input class="form-control" asp-for="TrialName" />
+            <span asp-validation-for="TrialName" class="text-danger"></span>
+        </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialEmail"></label>
+            <input class="form-control" asp-for="TrialEmail" />
+            <span asp-validation-for="TrialEmail" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialAttribution"></label>
+            <select class="form-control" asp-for="TrialAttribution" asp-items="Html.GetEnumSelectList<TrialAttribution>()">
+                <option value="">Not Attributed</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <label class="col-form-label" asp-for="TrialOwner"></label>
+            <span data-bs-toggle="tooltip" data-bs-placement="right" title="Select this only if the trial is always handled by the same team.">
+                <i class="bi bi-info-circle ms-1 text-muted"></i>
+            </span>
+            <select class="form-control" asp-for="TrialOwner" asp-items="Html.GetEnumSelectList<TrialAttribution>()">
+                <option value="">No Owner</option>
+            </select>
+        </div>
+    </div>
+    </div>
+    <div class="row">
+    <div class="col-md-4">
+            <input type="hidden" asp-for="@showActiveTrials" />
+            <button class="btn btn-primary float-end my-3" type="submit">Add New Trial</button>
+            <a class=" btn btn-secondary float-end my-3 me-3 pointerOnHover text-white" onclick="history.back()">Cancel</a>
+        </div>
+    </div>
+</form>

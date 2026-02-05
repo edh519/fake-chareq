@@ -1,0 +1,118 @@
+﻿@using Enums.Enums;
+
+@model BusinessLayer.ViewModels.WorkRequestViewModel
+
+@{
+    ViewBag.Title = "New Request";
+}
+@section Styles {
+    <style>
+        #upload-icon {
+            font-size: 3rem;
+        }
+    </style>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+}
+@section Scripts {
+    <script asp-src-include="~/js/Pages/CreateWorkRequest.js" asp-append-version="true"></script>
+}
+
+<div class="offset-lg-3">
+    <form asp-action="CreateWorkRequest" method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
+        @* TITLE/PAGE HEADER *@
+        <h4 class="fw-bold">@ViewBag.Title</h4>
+
+        @* WHICH TRIAL *@
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-group">
+                    @if (User.IsInRole(IdentityRoleEnum.Authoriser.ToString()))
+                    {
+                        <label for="TrialMultiSelect">Which trial/system?</label>
+                        <select asp-for="SelectedTrialIds" id="TrialMultiSelect" class="form-control" asp-items="@(new SelectList(Model.Trials.Where(e => !e.TrialName.Contains("Other", StringComparison.OrdinalIgnoreCase)), "TrialId", "TrialName"))" multiple="multiple"></select>
+                    }
+                    else
+                    {
+                        <label asp-for="Trial">Which trial/system?</label>
+                        <select asp-for="Trial" data-val=false class="form-control" asp-items="@(new SelectList(Model.Trials, "TrialId", "TrialName"))">
+                            <option value="" selected disabled>-- Select Trial Name --</option>
+                        </select>
+
+                        <div id="OtherSpecifyTrial">
+                            <label asp-for="TrialOther"></label>
+                            <input asp-for="TrialOther" data-val="false" class="form-control" />
+                            <span asp-validation-for="TrialOther" class="text-danger"></span>
+                        </div>
+                    }
+                    <span asp-validation-for="Trial" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+
+        @* REQUEST TITLE *@
+        <div class="row">
+            <div class="col-md-8 mt-3">
+                <label asp-for="Reference">Give your request a title</label> <i class="text-muted-theme-toggle">(50 characters max)</i></>
+                <input asp-for="Reference" class="form-control" type="text" spellcheck="true" data-val=false />
+                <span asp-validation-for="Reference" class="text-danger"></span>
+            </div>
+        </div>
+
+        @* REQUEST DESCRIPTION *@
+        <div class="row">
+            <div class="col-md-8 mt-3">
+                <div class="form-group">
+                    <label asp-for="DetailDescription">What would you like to change or happen?</label>
+                    <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-html="true" title="Please ensure ALL details of the request are listed here and are clear. Include a deadline if there is one. Don't forget to upload any supporting documents. Check your request makes sense after any editing."></i>
+
+                    <textarea asp-for="DetailDescription" class="form-control htmlForm" spellcheck="true"
+                              placeholder="Consider the 5 W's: Who, What, Why, Where and When." rows="20"></textarea>
+                    <span asp-validation-for="DetailDescription" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 mt-1">
+                <partial name="FileUploadButton" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 mt-3">
+                <div class="d-flex align-items-end flex-row mb-5">
+                    <input type="submit" class="btn btn-primary my-auto" onclick="ShowSpinner(this)" value="Submit Request" />
+                </div>
+
+                <div id="spinner" style="display:none">
+                    <div style="width:100%; display:flex;">
+                        <h3 style="margin: auto; padding: 25px;" id="spinnerText">Submitting request...</h3>
+                    </div>
+                    <div style="width:100%; display:flex;">
+                        <div class="spinner-border text-primary" style="margin: auto; padding: 25px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 mt-3">
+                <h4 class="fw-bold">Service Level Agreement</h4>
+                <p>We endeavour to respond to all enquiries within 1 working day.</p>
+                <p>During this time your issue will be triaged and assigned to the relevant team.</p>
+                <p>
+                    The priority of your issue depends on the scale of those affected, the timescale of requirement and whether it is a
+                    <span data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="A request is something that you want to happen in the future" style="font-weight:bold">request</span>
+                    or an
+                    <span data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="An incident is something that has already happened." style="font-weight:bold">incident</span>.
+                </p>
+                <p>The timescale to fix your issue is dependent on the priority and complexity of your issue.</p>
+                <p>Each issue is unique and potentially something never encountered before therefore we cannot provide blanket timescales for a fix.</p>
+                <p>However, most issues are fixed within a week or two of being raised here on ChaReq.</p>
+                <p>If you have any concerns about the time being taken to resolve your issue please get in touch and we can discuss the matter privately.</p>
+            </div>
+        </div>
+
+    </form>
+</div>

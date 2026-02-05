@@ -1,0 +1,73 @@
+﻿@model BusinessLayer.ViewModels.AssigneesViewModel
+@using BusinessLayer.Helpers
+@using BusinessLayer.ViewModels
+
+@section Scripts {
+
+}
+@{
+    List<UserSimpleViewModel> usersAvailableToAssign = Model?.AssignableUsers ?? new();
+    List<UserSimpleViewModel> usersAssigned = Model?.AssignedUsers ?? new();
+    int workRequestId = Model.WorkRequestId;
+    bool isAuthoriser = User.IsInRole("Authoriser");
+}
+
+<input value="@isAuthoriser" name="isAuthoriser" type="hidden" />
+
+<div class="card-header">
+    <b>Assignees</b>
+    @if (!Model.IsLoggedInUserOfRoleTypeUser)
+    {
+        <button class="btn btn-outline-danger float-end m-0 text-color-theme py-0" onclick="toggleAssigneeRemoval(this)" name="toggleAssigneeRemovalBtn">Unassign</button>
+    }
+</div>
+
+<div class="card-body py-1" name="assigneesWrapper">
+    @if (usersAssigned != null && usersAssigned.Any())
+    {
+        @foreach (var user in usersAssigned)
+        {
+            @*NOTE: Maintain html along with `assigneeHtml` in `\WebApp\wwwroot\js\Pages\_WorkRequestAssigneePartial.js`*@
+            <span class="badge rounded-pill my-1 font-size-1rem fw-normal assignee-badge-pill text-color-theme-important"
+            data-bs-toggle="tooltip"
+            title="@user.Email"
+            data-workRequestId="@workRequestId"
+            data-userEmail="@user.Email">
+                <i class="fas fa-user-circle pe-1 "></i> @CommonHelpers.TrimStringToMaxLength(@CommonHelpers.RemoveDomainFromEmail(user.Email), 16)
+            </span>
+        }
+    }
+</div>
+
+@*Hidden by JS on pageload*@
+<div class="alert alert-info mt-1 mb-0" name="removeAssigneeInfo"><i class="fa fa-info-circle"></i> Unassign by clicking on their name above.</div>
+
+@if (!Model.IsLoggedInUserOfRoleTypeUser)
+{
+    <span class="add-assignee-wrapper input-group" name="addAssigneeWrapper">
+        <label for="assigneeSelect" class="visually-hidden">
+            Assignee
+        </label>
+
+        <select id="assigneeSelect"
+                class="form-control"
+                name="assigneeSelect"
+                style="padding-left:1rem;">
+            <option selected disabled>Select assignee</option>
+
+            @if (usersAvailableToAssign != null && usersAvailableToAssign.Any())
+            {
+                List<UserSimpleViewModel> sortedList = usersAvailableToAssign.OrderBy(x => x.Email).ToList();
+                @foreach (var user in sortedList)
+                {
+                    <option value="@user.Email">@user.Email</option>
+                }
+            }
+        </select>
+
+        <span class="input-group-append">
+            <button class="btn btn-primary input-group-append" onclick="addSelectedAssignee(this, @workRequestId)">Add</button>
+        </span>
+    </span>
+}
+

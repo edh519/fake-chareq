@@ -1,0 +1,292 @@
+﻿@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using Enums.Enums
+@{
+    Layout = "_Layout";
+    ViewBag.Title = "View Sub Tasks"; // Fallback value if JS fails or isn't set in JS.
+                                          <script type="text/javascript" src="~/js/Pages/ViewAllSubTasks.js" asp-append-version="true"></script>
+}
+@functions {
+    string GetDisplayName(Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        var attr = field?.GetCustomAttribute<DisplayAttribute>();
+        return attr?.Name ?? value.ToString();
+    }
+}
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<script type="text/javascript" src="https://cdn.datatables.net/datetime/1.5.5/js/dataTables.dateTime.min.js"></script>
+<link rel="stylesheet" href="~/css/view-all-sub-tasks-index.css" />
+
+
+@model BusinessLayer.ViewModels.ViewAllSubTasksIndexViewModel
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0 sidebar" id="filterPanel">
+            <div class="sticky-top side-panel p-2">
+                <div id="filterHeader" class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="row">
+                        <div class="col-12 col-xl-6">
+                            <h5 class="mb-0">Filters</h5>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column align-items-end">
+                        <div id="sidebarToggle" class="sidebar-toggle-inside" title="Click to toggle filter sidebar">
+                            <i class="fas fa-arrow-circle-left"></i>
+                        </div>
+                        <button id="resetFilters" class="btn btn-sm btn-danger mb-1">Reset Filters</button>
+                        <button id="collapseAll" class="btn btn-sm btn-secondary mb-1">Collapse All</button>
+                    </div>
+                </div>
+
+                <div id="filterAccordions">
+                <h6>
+                    Filter by...
+                </h6>
+
+                <div class="accordion" id="accordion">
+
+                    <!-- Status Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingStatus">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" data-bs-toggle="collapse" data-bs-target="#statusFilter" aria-expanded="false" aria-controls="statusFilter">
+                                    Status
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="statusFilter" class="collapse" aria-labelledby="headingStatus">
+                            <div class="card-body">
+                                    <fieldset>
+                                        <legend>Select Status</legend>
+                                        @foreach (var status in Model.Statuses)
+                                        {
+                                            var displayName = GetDisplayName(status.SubTaskStatusId);
+                                            <div>
+                                                <input type="checkbox" id="status-@status.SubTaskStatusName" name="statusOption" value="@status.SubTaskStatusName" />
+                                                <label for="status-@status.SubTaskStatusName">@displayName</label>
+                                            </div>
+                                        }
+                                    </fieldset>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearStatusFilter()">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Created Date Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingCreatedDate">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#createdDateFilter" aria-expanded="false" aria-controls="createdDateFilter">
+                                    Created Date
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="createdDateFilter" class="collapse" aria-labelledby="headingCreatedDate">
+                            <div class="card-body">
+                                <span class="col-form-label">Select Created Date:</span>
+                                <div id="createdDatePicker" style="background: var(--form-control-bg); cursor: pointer; padding: 5px 10px; border: 1px solid; width: 100%">
+                                    <i class="fa fa-calendar"></i>&nbsp;
+                                    <span></span> <i class="fa fa-caret-down"></i>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearDateFilter('createdDate');">
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Finalised Date Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingFinalisedDate">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#finalisedDateFilter" aria-expanded="false" aria-controls="createdDateFilter">
+                                    Finalised Date
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="finalisedDateFilter" class="collapse" aria-labelledby="headingFinalisedDate">
+                            <div class="card-body">
+                                <span class="col-form-label">Select Finalised Date:</span>
+                                <div id="finalisedDatePicker" style="background: var(--form-control-bg); cursor: pointer; padding: 5px 10px; border: 1px solid; width: 100%">
+                                    <i class="fa fa-calendar"></i>&nbsp;
+                                    <span></span> <i class="fa fa-caret-down"></i>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearDateFilter('finalisedDate')">
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trials Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingTrials">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" data-bs-toggle="collapse" data-bs-target="#trialFilter" aria-expanded="false" aria-controls="trialFilter">
+                                    Trial
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="trialFilter" class="collapse" aria-labelledby="headingTrials">
+                            <div class="card-body">
+                                <label class="col-form-label" for="trialDropdown">
+                                    Select Trial
+                                    <i class="form-check-label fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="Tip: You can select multiple trials by holding down the control button (Ctrl) on your keyboard">
+                                    </i>
+                                </label>
+
+                                <select class="form-control" id="trialDropdown" name="trial" multiple>
+                                    @foreach (var trial in Model.Trials)
+                                    {
+                                        <option value="@trial.TrialName">@trial.TrialName</option>
+                                    }
+                                </select>
+                                <!-- Clear Button placed under the options -->
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearTrialFilter()">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requester Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingRequester">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#requesterFilter" aria-expanded="false" aria-controls="requesterFilter">
+                                    Requester
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="requesterFilter" class="collapse" aria-labelledby="headingRequester">
+                            <div class="card-body">
+                                    <fieldset>
+                                        <legend>Select Requester</legend>
+                                        <div>
+                                            <input type="checkbox" id="meCheckboxRequester" name="requesterOption" value="@Model.CurrentUser">
+                                            <label for="meCheckboxRequester">Me</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" id="searchCheckboxRequester" name="requesterOption" value="search">
+                                            <label for="searchCheckboxRequester">Search Requester</label>
+                                        </div>
+                                    </fieldset>
+                                <div id="requesterSearchContainer" style="display:none;">
+                                    <label for="requesterSearch" class="visually-hidden">Search requester</label>
+                                    <input type="text" id="requesterSearch" class="form-control" placeholder="Search requester...">
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearRequesterFilter()">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignees Filter -->
+                    <div class="card">
+                        <div class="card-header" id="headingAssignees">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link filter-link w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#assigneesFilter" aria-expanded="false" aria-controls="assigneesFilter">
+                                    Assignee
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="assigneesFilter" class="collapse" aria-labelledby="headingAssignees">
+                            <div class="card-body">
+                                    <fieldset>
+                                        <legend>Select Assignees</legend>
+                                        <div>
+                                            <input type="checkbox" id="meCheckboxAssignees" name="assigneesOption" value="@Model.CurrentUser">
+                                            <label for="meCheckboxAssignees">Me</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" id="searchCheckboxAssignees" name="assigneesOption" value="search">
+                                            <label for="searchCheckboxAssignees">Search Assignee</label>
+                                        </div>
+                                    </fieldset>
+                                <div id="AssigneeSearchContainer" style="display:none;">
+                                    <label for="assigneesSearch" class="visually-hidden">Search assignee</label>
+                                    <input type="text" id="assigneesSearch" class="form-control" placeholder="Search assignee...">
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="clearAssigneesFilter()">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Authoriser"))
+                    {
+                        <!-- View Historic -->
+                        <div class="card">
+                            <div class="card-header" id="headingHistoric">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link filter-link w-100 text-start" data-bs-toggle="collapse" data-bs-target="#historicToggle" aria-expanded="false" aria-controls="historicToggle">
+                                        Historic
+                                    </button>
+                                </h5>
+                            </div>
+
+                            <div id="historicToggle" class="collapse" aria-labelledby="headingHistoric">
+                                <div class="card-body">
+                                    <span class="col-form-label" for="historic-option">View All<br /><span class="small">Warning: This may take some time to load</span></span>
+                                    <br />
+                                    <div>
+                                        <input type="checkbox" id="historic-checkbox" name="historic-option" onclick="HistoricCheckboxClick(this)" />
+                                        <label for="historic-checkbox">View All</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                </div> <!-- End Accordion -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-4" id="mainContent">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold">All Sub Tasks</h4>
+            </div>
+            <div id="spinner">
+                <div class="d-flex justify-content-center">
+                    <h3 class="m-3">Fetching data...</h3>
+                </div>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary m-3"></div>
+                </div>
+            </div>
+            <table id="subTaskTable" class="table table-hover table-theme-toggle" style="width:100%;"></table>
+        </main>
+
+    </div>
+</div>
+
+<!-- Arrow toggle -->
+<div id="sidebarToggleFloating"
+     class="sidebar-toggle-floating d-none"
+     title="Click to toggle filter sidebar">
+    <i class="fas fa-arrow-circle-right"></i>
+</div>
+
