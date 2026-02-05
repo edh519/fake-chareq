@@ -49,3 +49,11 @@ jobs:
                   DUE_LIST="$DUE_LIST\n- $repo ($dateStr)"
                 fi
               fi
+             fi
+          done
+
+          echo -e "Repos due:$DUE_LIST"
+
+          echo "due_list<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$DUE_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
