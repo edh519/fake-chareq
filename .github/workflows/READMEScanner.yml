@@ -23,11 +23,9 @@ jobs:
           repos=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/orgs/$ORG/repos?per_page=100&type=all |
-            jq -r '.[]? | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
-      
-          echo "Found repos:"
-          echo "$repos"
+            https://api.github.com/orgs/$ORG/repos?per_page=100&type=all)
+
+          repos=$(echo "$json" | jq -r '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
       
           DUE_LIST=""
       
