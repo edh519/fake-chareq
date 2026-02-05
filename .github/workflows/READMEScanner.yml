@@ -51,29 +51,38 @@ jobs:
               diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
         
               # Print all info for this repo
-              echo "Repo: $repo"
-              echo "  Status: $status"
-              echo "  Contents: $contents"
-              echo "  Service Name: $service_name"
-              echo "  Ownership Rating: $ownership"
-              echo "  Quality Rating: $quality"
-              echo "  Next Review Due: $next_review (in $diffDays days)"
-              echo "  Expected Retirement: $retirement"
-              echo "-----------------------------------"
+            #  echo "Repo: $repo"
+            #  echo "  Status: $status"
+           #   echo "  Contents: $contents"
+           #   echo "  Service Name: $service_name"
+          #    echo "  Ownership Rating: $ownership"
+            #  echo "  Quality Rating: $quality"
+           #   echo "  Next Review Due: $next_review (in $diffDays days)"
+           #   echo "  Expected Retirement: $retirement"
+            #  echo "-----------------------------------"
         
-              # Append to DUE_LIST if review is due soon
-              if [ "$diffDays" -le $THRESHOLD_DAYS ]; then
+               # Process review date for due list
+            if [ -n "$next_review" ]; then
+              reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
+              diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
+              if [ "$reviewEpoch" -gt 0 ] && [ "$diffDays" -le $THRESHOLD_DAYS ]; then
                 DUE_LIST="$DUE_LIST\n- $repo | Status: $status | Next Review: $next_review | Service: $service_name"
               fi
             fi
-          else
-            echo "$repo - No review date found"
-          fi
-          done
+          
+            # Process retirement date for retire list
+            if [ -n "$retirement" ]; then
+              retireEpoch=$(date -d "$retirement" +%s 2>/dev/null || echo 0)
+              retireDays=$(( (retireEpoch - TODAY) / 86400 ))
+              if [ "$retireEpoch" -gt 0 ] && [ "$retireDays" -le $RETIRE_THRESHOLD ]; then
+                RETIRE_LIST="$RETIRE_LIST\n- $repo | Status: $status | Retirement: $retirement | Service: $service_name"
+              fi
+            fi
+            done
 
-
-      
-          echo -e "Repos due:$DUE_LIST"
+          # Output for workflow or email
+          echo -e "Reviews due soon:$DUE_LIST"
+          echo -e "Repositories retiring soon:$RETIRE_LIST"
       
           echo "due_list<<EOF" >> $GITHUB_OUTPUT
           echo -e "$DUE_LIST" >> $GITHUB_OUTPUT
