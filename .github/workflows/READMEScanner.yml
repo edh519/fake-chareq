@@ -29,30 +29,48 @@ jobs:
           for repo in $repos; do
           echo "Checking $repo..."
         
-          # Get README content (base64-decoded)
+          # Fetch README content (base64-decoded automatically)
           readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
         
+          # Only proceed if README has the review field
           if [[ "$readme" == *"Repo-Next-Review-Due"* ]]; then
-            dateStr=$(echo "$readme" | grep "Repo-Next-Review-Due" | sed 's/.*: //')
-            
-            # Convert to epoch for comparison
-            reviewEpoch=$(date -d "$dateStr" +%s 2>/dev/null || echo 0)
+        
+            # Extract all fields
+            status=$(echo "$readme" | grep "^Repo-Status:" | sed 's/.*: //')
+            contents=$(echo "$readme" | grep "^Repo-Contents:" | sed 's/.*: //')
+            service_name=$(echo "$readme" | grep "^Repo-Service-Name:" | sed 's/.*: //')
+            ownership=$(echo "$readme" | grep "^Repo-Ownership-Rating:" | sed 's/.*: //')
+            quality=$(echo "$readme" | grep "^Repo-Quality-Rating:" | sed 's/.*: //')
+            next_review=$(echo "$readme" | grep "^Repo-Next-Review-Due:" | sed 's/.*: //')
+            retirement=$(echo "$readme" | grep "^Repo-Expected-Retirement-Date:" | sed 's/.*: //')
+        
+            # Convert review date to epoch for comparison
+            reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
         
             if [ "$reviewEpoch" -gt 0 ]; then
               diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
-              
-              echo "$repo - Review date: $dateStr - in $diffDays days"
         
+              # Print all info for this repo
+              echo "Repo: $repo"
+              echo "  Status: $status"
+              echo "  Contents: $contents"
+              echo "  Service Name: $service_name"
+              echo "  Ownership Rating: $ownership"
+              echo "  Quality Rating: $quality"
+              echo "  Next Review Due: $next_review (in $diffDays days)"
+              echo "  Expected Retirement: $retirement"
+              echo "-----------------------------------"
+        
+              # Append to DUE_LIST if review is due soon
               if [ "$diffDays" -le $THRESHOLD_DAYS ]; then
-                DUE_LIST="$DUE_LIST\n- $repo ($dateStr)"
+                DUE_LIST="$DUE_LIST\n- $repo | Status: $status | Next Review: $next_review | Service: $service_name"
               fi
-            else
-              echo "$repo - Review date not parseable: $dateStr"
             fi
           else
             echo "$repo - No review date found"
           fi
-          done
+        done
+
 
       
           echo -e "Repos due:$DUE_LIST"
