@@ -83,24 +83,50 @@ jobs:
           echo -e "$RETIRE_LIST" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          # Initialize tables with headers
-          REVIEWS_TABLE="| Repo | Status | Next Review | Service |\n| --- | --- | --- | --- |"
-          RETIRE_TABLE="| Repo | Status | Retirement | Service |\n| --- | --- | --- | --- |"
+          # Initialize table header
+          REVIEWS_TABLE="| Repo | Status | Next Review | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
           
-          # Build Reviews table
+          # Temporary array to hold rows with epoch for sorting
+          rows=()
+          
           while IFS= read -r line; do
-            # Skip empty lines
             [ -z "$line" ] && continue
-            # Extract fields from your DUE_LIST line: "- repo | Status: ... | Next Review: ... | Service: ..."
             repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
             status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
             next_review=$(echo "$line" | cut -d'|' -f3 | sed 's/Next Review: //;s/^ *//;s/ *$//')
             service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
           
-            REVIEWS_TABLE="$REVIEWS_TABLE\n| $repo | $status | $next_review | $service |"
+            # Calculate epoch
+            reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
+            diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
+          
+            # Determine due status
+            if [ "$diffDays" -lt 0 ]; then
+              due_status="overdue"
+              diffDays=$(( -diffDays ))  # show overdue in positive days
+            else
+              due_status="due soon"
+            fi
+          
+            # Save row with epoch for sorting
+            rows+=("$reviewEpoch|$repo|$status|$next_review|$service|$diffDays|$due_status")
           done <<< "$DUE_LIST"
           
-          # Build Retirement table
+          # Sort rows by epoch ascending
+          IFS=$'\n' sorted_rows=($(sort -n <<<"${rows[*]}"))
+          
+          # Build table
+          for row in "${sorted_rows[@]}"; do
+            IFS='|' read -r _repo _repoName _status _date _service _days _dueStatus <<< "$row"
+            REVIEWS_TABLE="$REVIEWS_TABLE\n| $_repoName | $_status | $_date | $_service | $_days | $_dueStatus |"
+          done
+
+          # Initialize table header
+          RETIRE_TABLE="| Repo | Status | Retirement | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
+          
+          # Temporary array to hold rows with epoch for sorting
+          retire_rows=()
+          
           while IFS= read -r line; do
             [ -z "$line" ] && continue
             repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
@@ -108,6 +134,31 @@ jobs:
             retirement=$(echo "$line" | cut -d'|' -f3 | sed 's/Retirement: //;s/^ *//;s/ *$//')
             service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
           
-            RETIRE_TABLE="$RETIRE_TABLE\n| $repo | $status | $retirement | $service |"
+            # Calculate epoch
+            retireEpoch=$(date -d "$retirement" +%s 2>/dev/null || echo 0)
+            diffDays=$(( (retireEpoch - TODAY) / 86400 ))
+          
+            # Determine due status
+            if [ "$diffDays" -lt 0 ]; then
+              due_status="overdue"
+              diffDays=$(( -diffDays ))  # show overdue as positive
+            else
+              due_status="due soon"
+            fi
+          
+            # Save row with epoch for sorting
+            retire_rows+=("$retireEpoch|$repo|$status|$retirement|$service|$diffDays|$due_status")
           done <<< "$RETIRE_LIST"
+          
+          # Sort rows by epoch ascending
+          IFS=$'\n' sorted_retire_rows=($(sort -n <<<"${retire_rows[*]}"))
+          
+          # Build table
+          for row in "${sorted_retire_rows[@]}"; do
+            IFS='|' read -r _repo _repoName _status _date _service _days _dueStatus <<< "$row"
+            RETIRE_TABLE="$RETIRE_TABLE\n| $_repoName | $_status | $_date | $_service | $_days | $_dueStatus |"
+          done
+
+          echo -e "$REVIEWS_TABLE" | column -t -s '|'
+          echo -e "$RETIRE_TABLE" | column -t -s '|'
 
