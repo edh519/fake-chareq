@@ -32,17 +32,17 @@ jobs:
           # Fetch README content (base64-decoded automatically)
           readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
         
-          # Only proceed if README has the review field
+          # Only proceed if README exists
           if [[ "$readme" ]]; then
         
             # Extract all fields
-            status=$(echo "$readme" | grep "^Repo-Status:" | sed 's/.*: //')
-            contents=$(echo "$readme" | grep "^Repo-Contents:" | sed 's/.*: //')
-            service_name=$(echo "$readme" | grep "^Repo-Service-Name:" | sed 's/.*: //')
-            ownership=$(echo "$readme" | grep "^Repo-Ownership-Rating:" | sed 's/.*: //')
-            quality=$(echo "$readme" | grep "^Repo-Quality-Rating:" | sed 's/.*: //')
-            next_review=$(echo "$readme" | grep "^Repo-Next-Review-Due:" | sed 's/.*: //')
-            retirement=$(echo "$readme" | grep "^Repo-Expected-Retirement-Date:" | sed 's/.*: //')
+            status=$(echo "$readme" | grep "Repo-Status" | head -n1 | cut -d':' -f2- | xargs)
+            contents=$(echo "$readme" | grep "Repo-Contents" | head -n1 | cut -d':' -f2- | xargs)
+            service_name=$(echo "$readme" | grep "Repo-Service-Name" | head -n1 | cut -d':' -f2- | xargs)
+            ownership=$(echo "$readme" | grep "Repo-Ownership-Rating" | head -n1 | cut -d':' -f2- | xargs)
+            quality=$(echo "$readme" | grep "Repo-Quality-Rating" | head -n1 | cut -d':' -f2- | xargs)
+            next_review=$(echo "$readme" | grep "Repo-Next-Review-Due" | head -n1 | cut -d':' -f2- | xargs)
+            retirement=$(echo "$readme" | grep "Repo-Expected-Retirement-Date" | head -n1 | cut -d':' -f2- | xargs)
         
             # Convert review date to epoch for comparison
             reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
