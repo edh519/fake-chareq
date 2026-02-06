@@ -24,83 +24,70 @@ jobs:
           github-token: ${{ secrets.AUTH_GITHUB_TOKEN }}
           script: |
             const org = process.env.ORG;
-            console.log("Organization:", org);
-            
             const repos = await github.paginate(
               github.rest.repos.listForOrg,
               { org }
             );
-            
             const filtered = repos
               .filter(r => !r.archived && !r.name.startsWith("stats-"))
               .map(r => r.name);
             
-            console.log("Filtered Repos:", filtered);
-            return filtered.join("\n");
+            return filtered.join(" ");
 
-      - name: Process Repos
-        uses: actions/github-script@v7
+      - name: Check repos
         env:
           ORG: uoy-trials
-        with:
-          script: |
-            const org = process.env.ORG;
-            const thresholdDays = parseInt(process.env.THRESHOLD_DAYS);
-            const retireThreshold = parseInt(process.env.RETIRE_THRESHOLD);
-            const today = new Date();
-            
-            let dueList = "";
-            let retireList = "";
-
-            const repos = await github.paginate(github.rest.repos.listForOrg, { org });
-            const filteredRepos = repos.filter(r => !r.archived && !r.name.startsWith("stats-"));
-
-            for (const repo of filteredRepos) {
-              console.log(`Checking ${repo.name}...`);
-              try {
-                // 2. Fetch README
-                const { data: readmeFile } = await github.rest.repos.getReadme({
-                  owner: org,
-                  repo: repo.name,
-                });
-                
-                const content = Buffer.from(readmeFile.content, 'base64').toString('utf-8');
-
-                const getMeta = (key) => {
-                  const regex = new RegExp(`${key}\\s*:\\s*(.*)`, 'i');
-                  const match = content.match(regex);
-                  return match ? match[1].trim() : null;
-                };
-
-                const status = getMeta("Repo-Status") || "Unknown";
-                const serviceName = getMeta("Repo-Service-Name") || "Unknown";
-                const nextReview = getMeta("Repo-Next-Review-Due");
-                const retirement = getMeta("Repo-Expected-Retirement-Date");
-
-                const checkDate = (dateStr, daysLimit) => {
-                  if (!dateStr) return false;
-                  const targetDate = new Date(dateStr);
-                  if (isNaN(targetDate)) return false;
-                  const diffTime = targetDate - today;
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays <= daysLimit;
-                };
-
-                if (checkDate(nextReview, thresholdDays)) {
-                  dueList += `\n- ${repo.name} | Status: ${status} | Next Review: ${nextReview} | Service: ${serviceName}`;
-                }
-
-                if (checkDate(retirement, retireThreshold)) {
-                  retireList += `\n- ${repo.name} | Status: ${status} | Retirement: ${retirement} | Service: ${serviceName}`;
-                }
-
-              } catch (e) {
-                console.log(`No README found for ${repo.name} or error occurred.`);
-              }
-            }
-
-            core.exportVariable('DUE_LIST', dueList);
-            core.exportVariable('RETIRE_LIST', retireList);
+          REPOS: ${{ steps.repos.outputs.result }}
+          THRESHOLD_DAYS: 30
+          RETIRE_THRESHOLD: 90
+        run: |
+          TODAY=$(date +%s)
+          DUE_LIST=""
+          RETIRE_LIST=""
+          echo "Fetching repos for $ORG..."
+          repos=$(gh api --paginate /orgs/$ORG/repos \
+            -q '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
+          for repo in $repos; do
+            echo "Checking $repo..."
+            # Skip forks
+            is_fork=$(gh api /repos/$ORG/$repo -q '.fork')
+            if [ "$is_fork" = "true" ]; then
+              echo "$repo is a fork — skipping"
+              continue
+            fi
+            # Fetch README
+            readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
+            if [[ "$readme" ]]; then
+              # Extract fields safely
+              status=$(echo "$readme" | grep "Repo-Status" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
+              service_name=$(echo "$readme" | grep "Repo-Service-Name" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
+              next_review=$(echo "$readme" | grep "Repo-Next-Review-Due" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
+              retirement=$(echo "$readme" | grep "Repo-Expected-Retirement-Date" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
+              # Review due
+              if [ -n "$next_review" ]; then
+                reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
+                diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
+                if [ "$reviewEpoch" -gt 0 ] && [ "$diffDays" -le $THRESHOLD_DAYS ]; then
+                  DUE_LIST="$DUE_LIST\n- $repo | Status: $status | Next Review: $next_review | Service: $service_name"
+                fi
+              fi
+              # Retirement due
+              if [ -n "$retirement" ]; then
+                retireEpoch=$(date -d "$retirement" +%s 2>/dev/null || echo 0)
+                retireDays=$(( (retireEpoch - TODAY) / 86400 ))
+                if [ "$retireEpoch" -gt 0 ] && [ "$retireDays" -le $RETIRE_THRESHOLD ]; then
+                  RETIRE_LIST="$RETIRE_LIST\n- $repo | Status: $status | Retirement: $retirement | Service: $service_name"
+                fi
+              fi
+            fi
+          done
+          # Export raw lists for next steps
+          echo "DUE_LIST<<EOF" >> $GITHUB_ENV
+          echo -e "$DUE_LIST" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "RETIRE_LIST<<EOF" >> $GITHUB_ENV
+          echo -e "$RETIRE_LIST" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Build tables
         shell: bash
