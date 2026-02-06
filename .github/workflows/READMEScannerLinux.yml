@@ -100,68 +100,81 @@ jobs:
       - name: Build tables
         shell: bash
         run: |
-          TODAY=$(date +%s)
-
-          # Reviews table
-          REVIEWS_TABLE="| Repo | Status | Next Review | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
-          rows=()
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
-            status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
-            next_review=$(echo "$line" | cut -d'|' -f3 | sed 's/Next Review: //;s/^ *//;s/ *$//')
-            service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
-
-            reviewEpoch=$(date -d "$next_review" +%s 2>/dev/null || echo 0)
-            diffDays=$(( (reviewEpoch - TODAY) / 86400 ))
-            due_status="due soon"
-            if [ "$diffDays" -lt 0 ]; then
-              due_status="overdue"
-              diffDays=$(( -diffDays ))
-            fi
-            rows+=("$reviewEpoch|$repo|$status|$next_review|$service|$diffDays|$due_status")
-          done <<< "$DUE_LIST"
-
-          IFS=$'\n' sorted_rows=($(sort -n <<<"${rows[*]}"))
-          for row in "${sorted_rows[@]}"; do
-            IFS='|' read -r _epoch _repo _status _date _service _days _dueStatus <<< "$row"
-            REVIEWS_TABLE="$REVIEWS_TABLE\n| $_repo | $_status | $_date | $_service | $_days | $_dueStatus |"
-          done
-
-          echo "REVIEWS_TABLE<<EOF" >> $GITHUB_ENV
-          echo -e "$REVIEWS_TABLE" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-          # Retirement table
-          RETIRE_TABLE="| Repo | Status | Retirement | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
-          retire_rows=()
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
-            status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
-            retirement=$(echo "$line" | cut -d'|' -f3 | sed 's/Retirement: //;s/^ *//;s/ *$//')
-            service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
-
-            retireEpoch=$(date -d "$retirement" +%s 2>/dev/null || echo 0)
-            diffDays=$(( (retireEpoch - TODAY) / 86400 ))
-            due_status="due soon"
-            if [ "$diffDays" -lt 0 ]; then
-              due_status="overdue"
-              diffDays=$(( -diffDays ))
-            fi
-            retire_rows+=("$retireEpoch|$repo|$status|$retirement|$service|$diffDays|$due_status")
-          done <<< "$RETIRE_LIST"
-
-          IFS=$'\n' sorted_retire_rows=($(sort -n <<<"${retire_rows[*]}"))
-          for row in "${sorted_retire_rows[@]}"; do
-            IFS='|' read -r _epoch _repo _status _date _service _days _dueStatus <<< "$row"
-            RETIRE_TABLE="$RETIRE_TABLE\n| $_repo | $_status | $_date | $_service | $_days | $_dueStatus |"
-          done
-
-          echo "RETIRE_TABLE<<EOF" >> $GITHUB_ENV
-          echo -e "$RETIRE_TABLE" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
+            # Use UTC timestamp for consistency
+            TODAY=$(date -u +%s)
+  
+            # Function to process lists into Markdown tables
+            generate_table() {
+              local input_list="$1"
+              local table_header="$2"
+              local date_label="$3" # "Next Review" or "Retirement"
+              local rows=()
+  
+              # If the list is empty, return a default message
+              if [ -z "$input_list" ]; then
+                echo "No items found."
+                return
+              fi
+  
+              # Read the list line by line
+              while IFS= read -r line; do
+                [ -z "$line" ] && continue
+                
+                # Extract fields based on the pipe delimiter
+                # Expected format: - repo | Status: X | Next Review: Y | Service: Z
+                repo=$(echo "$line" | cut -d'|' -f1 | sed 's/- //;s/^ *//;s/ *$//')
+                status=$(echo "$line" | cut -d'|' -f2 | sed 's/Status: //;s/^ *//;s/ *$//')
+                target_date=$(echo "$line" | cut -d'|' -f3 | sed "s/$date_label: //;s/^ *//;s/ *$//")
+                service=$(echo "$line" | cut -d'|' -f4 | sed 's/Service: //;s/^ *//;s/ *$//')
+  
+                # Convert date to epoch for sorting and math
+                targetEpoch=$(date -d "$target_date" +%s 2>/dev/null || echo 0)
+                
+                if [ "$targetEpoch" -gt 0 ]; then
+                  diffSeconds=$(( targetEpoch - TODAY ))
+                  diffDays=$(( diffSeconds / 86400 ))
+                  
+                  due_status="due soon"
+                  displayDays=$diffDays
+                  if [ "$diffDays" -lt 0 ]; then
+                    due_status="**overdue**"
+                    displayDays=$(( -diffDays ))
+                  fi
+                  
+                  # Store with epoch prefix for sorting
+                  rows+=("$targetEpoch|$repo|$status|$target_date|$service|$displayDays|$due_status")
+                fi
+              done <<< "$input_list"
+  
+              # Output Header
+              echo -e "$table_header"
+              
+              # Sort by epoch (first column) and format as table rows
+              if [ ${#rows[@]} -eq 0 ]; then
+                 echo "| N/A | N/A | N/A | N/A | N/A | N/A |"
+              else
+                 printf "%s\n" "${rows[@]}" | sort -n | while IFS='|' read -r _epoch _repo _status _date _service _days _dueStatus; do
+                   echo "| $_repo | $_status | $_date | $_service | $_days | $_dueStatus |"
+                 done
+              fi
+            }
+  
+            # 1. Generate Reviews Table
+            REVIEW_HDR="| Repo | Status | Next Review | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
+            REVIEWS_TABLE=$(generate_table "$DUE_LIST" "$REVIEW_HDR" "Next Review")
+  
+            echo "REVIEWS_TABLE<<EOF" >> $GITHUB_ENV
+            echo -e "$REVIEWS_TABLE" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+  
+            # 2. Generate Retirement Table
+            RETIRE_HDR="| Repo | Status | Retirement | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
+            RETIRE_TABLE=$(generate_table "$RETIRE_LIST" "$RETIRE_HDR" "Retirement")
+  
+            echo "RETIRE_TABLE<<EOF" >> $GITHUB_ENV
+            echo -e "$RETIRE_TABLE" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          
       - name: Send email
         uses: dawidd6/action-send-mail@v5
         with:
