@@ -1,20 +1,42 @@
-name: Org README Review Checker
+name: README Scanner
 
 on:
   schedule:
     - cron: '0 7 * * 1'
   workflow_dispatch:
+  push:
+    branches:
+      - 30-readme-scanner
 
 jobs:
   check:
-    runs-on: ubuntu
+    runs-on: self-hosted
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch repos
+        id: repos
+        uses: actions/github-script@v7
+        env:
+          ORG: uoy-trials
+        with:
+          github-token: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          script: |
+            const org = process.env.ORG;
+            const repos = await github.paginate(
+              github.rest.repos.listForOrg,
+              { org }
+            );
+            const filtered = repos
+              .filter(r => !r.archived && !r.name.startsWith("stats-"))
+              .map(r => r.name);
+            return filtered.join("\n");
+
       - name: Check repos
         env:
           ORG: uoy-trials
-          TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          REPOS: ${{ steps.repos.outputs.result }}
           THRESHOLD_DAYS: 28
           RETIRE_THRESHOLD: 28
         run: |
@@ -22,25 +44,15 @@ jobs:
           DUE_LIST=""
           RETIRE_LIST=""
 
-          echo "Fetching repos for $ORG..."
-          repos=$(gh api --paginate /orgs/$ORG/repos \
-            -q '.[] | select(.archived == false and (.name | startswith("stats-") | not)) | .name')
-
-          for repo in $repos; do
+          for repo in $REPOS; do
             echo "Checking $repo..."
 
-            # Skip forks
-            is_fork=$(gh api /repos/$ORG/$repo -q '.fork')
-            if [ "$is_fork" = "true" ]; then
-              echo "$repo is a fork — skipping"
-              continue
-            fi
-
-            # Fetch README
-            readme=$(gh api /repos/$ORG/$repo/readme -q '.content' | base64 --decode)
+            # Fetch README using GitHub API via curl
+            readme=$(curl -s -H "Authorization: token ${{ secrets.AUTH_GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/$ORG/$repo/readme | jq -r '.content' | base64 --decode)
 
             if [[ "$readme" ]]; then
-              # Extract fields safely
               status=$(echo "$readme" | grep "Repo-Status" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
               service_name=$(echo "$readme" | grep "Repo-Service-Name" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
               next_review=$(echo "$readme" | grep "Repo-Next-Review-Due" | head -n1 | cut -d':' -f2- | sed 's/^ *//;s/ *$//' || echo "")
@@ -66,7 +78,7 @@ jobs:
             fi
           done
 
-          # Export raw lists for next steps
+          # Export lists for next steps
           echo "DUE_LIST<<EOF" >> $GITHUB_ENV
           echo -e "$DUE_LIST" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
@@ -79,8 +91,8 @@ jobs:
         shell: bash
         run: |
           TODAY=$(date +%s)
-          
-          # --- Reviews Table ---
+
+          # Reviews table
           REVIEWS_TABLE="| Repo | Status | Next Review | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
           rows=()
           while IFS= read -r line; do
@@ -106,9 +118,11 @@ jobs:
             REVIEWS_TABLE="$REVIEWS_TABLE\n| $_repo | $_status | $_date | $_service | $_days | $_dueStatus |"
           done
 
-          echo "$REVIEWS_TABLE"
+          echo "REVIEWS_TABLE<<EOF" >> $GITHUB_ENV
+          echo -e "$REVIEWS_TABLE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-          # --- Retirement Table ---
+          # Retirement table
           RETIRE_TABLE="| Repo | Status | Retirement | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
           retire_rows=()
           while IFS= read -r line; do
@@ -134,5 +148,24 @@ jobs:
             RETIRE_TABLE="$RETIRE_TABLE\n| $_repo | $_status | $_date | $_service | $_days | $_dueStatus |"
           done
 
-          echo "$RETIRE_TABLE"
+          echo "RETIRE_TABLE<<EOF" >> $GITHUB_ENV
+          echo -e "$RETIRE_TABLE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
+      - name: Send email
+        uses: dawidd6/action-send-mail@v5
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          subject: "GitHub README Scanner"
+          to: ytu-techsupport-group@york.ac.uk
+          from: "${{ github.repository }} <${{ secrets.MAIL_USERNAME }}>"
+          reply_to: ytu-techsupport-group@york.ac.uk
+          content_type: text/markdown
+          body: |
+            ## Repos with Reviews Due Soon
+            ${{ env.REVIEWS_TABLE }}
+
+            ## Repos Retiring Soon
+            ${{ env.RETIRE_TABLE }}
