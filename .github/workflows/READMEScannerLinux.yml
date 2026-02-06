@@ -44,13 +44,11 @@ jobs:
           github-token: ${{ secrets.AUTH_GITHUB_TOKEN }}
           script: |
             const org = process.env.ORG;
-            console.log(`$org`);
             const repoNames = JSON.parse(process.env.REPO_LIST);
-            console.log(`$repoNames`);
             const today = new Date();
             const thresholdDays = parseInt(process.env.THRESHOLD_DAYS);
             
-            let dueList = "";
+            let reviewList = "";
             let retireList = "";
 
             for (const name of repoNames) {
@@ -82,19 +80,19 @@ jobs:
                 };
 
                 const reviewDiff = getDiffDays(nextReviewStr);
-                // FIX: Changed repo.name to name
+                
                 if (reviewDiff !== null && reviewDiff <= thresholdDays) {
-                  dueList += `\n- ${name} | Status: ${status} | Next Review: ${nextReviewStr} | Service: ${serviceName}`;
+                  reviewList += `\n- ${name} | Status: ${status} | Next Review: ${nextReviewStr} | Service: ${serviceName}`;
                 }
 
                 const retireDiff = getDiffDays(retirementStr);
-                // FIX: Changed repo.name to name
+                
                 if (retireDiff !== null && retireDiff <= thresholdDays) {
                   retireList += `\n- ${name} | Status: ${status} | Retirement: ${retirementStr} | Service: ${serviceName}`;
                 }
             }
 
-            core.exportVariable('DUE_LIST', dueList.trim());
+            core.exportVariable('REVIEW_LIST', reviewList.trim());
             core.exportVariable('RETIRE_LIST', retireList.trim());
 
       - name: Build tables
@@ -161,7 +159,7 @@ jobs:
   
             # 1. Generate Reviews Table
             REVIEW_HDR="| Repo | Status | Next Review | Service | Days | Due Status |\n| --- | --- | --- | --- | --- | --- |"
-            REVIEWS_TABLE=$(generate_table "$DUE_LIST" "$REVIEW_HDR" "Next Review")
+            REVIEWS_TABLE=$(generate_table "$REVIEW_LIST" "$REVIEW_HDR" "Next Review")
   
             echo "REVIEWS_TABLE<<EOF" >> $GITHUB_ENV
             echo -e "$REVIEWS_TABLE" >> $GITHUB_ENV
