@@ -56,7 +56,7 @@ jobs:
 
             for (const name of repoNames) {
               console.log(`Processing: ${name}`);
-              try {
+              
                 const { data: readmeFile } = await github.rest.repos.getReadme({
                   owner: org,
                   repo: name,
@@ -93,11 +93,6 @@ jobs:
                 if (retireDiff !== null && retireDiff <= retireThreshold) {
                   retireList += `\n- ${name} | Status: ${status} | Retirement: ${retirementStr} | Service: ${serviceName}`;
                 }
-
-              } catch (err) {
-                // FIX: Changed repo.name to name
-                console.log(`Skipping ${name}: No README found.`);
-              }
             }
 
             core.exportVariable('DUE_LIST', dueList.trim());
