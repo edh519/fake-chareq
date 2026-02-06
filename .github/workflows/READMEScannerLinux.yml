@@ -45,7 +45,7 @@ jobs:
           THRESHOLD_DAYS: 28
           RETIRE_THRESHOLD: 28
         run: |
-          const org = process.env.ORG;
+            const org = process.env.ORG;
             const thresholdDays = parseInt(process.env.THRESHOLD_DAYS);
             const retireThreshold = parseInt(process.env.RETIRE_THRESHOLD);
             const today = new Date();
