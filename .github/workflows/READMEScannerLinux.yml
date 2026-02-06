@@ -38,13 +38,12 @@ jobs:
             console.log("Filtered Repos:", filtered);
             return filtered.join("\n");
 
-      - name: Check repos
+      - name: Process Repos
+        uses: actions/github-script@v7
         env:
           ORG: uoy-trials
-          REPOS: ${{ steps.repos.outputs.result }}
-          THRESHOLD_DAYS: 28
-          RETIRE_THRESHOLD: 28
-        run: |
+        with:
+          script: |
             const org = process.env.ORG;
             const thresholdDays = parseInt(process.env.THRESHOLD_DAYS);
             const retireThreshold = parseInt(process.env.RETIRE_THRESHOLD);
