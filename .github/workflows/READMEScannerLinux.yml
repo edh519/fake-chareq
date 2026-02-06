@@ -32,7 +32,7 @@ jobs:
               .filter(r => !r.archived && !r.name.startsWith("stats-"))
               .map(r => r.name);
             
-            return filtered.join(", ");
+            return filtered;
 
       - name: Check repos metadata
         uses: actions/github-script@v7
@@ -62,9 +62,8 @@ jobs:
                   repo: name,
                 });
                 
-                const content = Buffer.from(readmeFile.content, 'base64').toString('utf-8')
+                const content = Buffer.from(readmeFile.content, 'base64').toString('utf-8');
 
-                // 3. Extraction Helper (Regex is more reliable than grep/cut)
                 const getMeta = (key) => {
                   const regex = new RegExp(`${key}\\s*:\\s*(.*)`, 'i');
                   const match = content.match(regex);
@@ -76,33 +75,31 @@ jobs:
                 const nextReviewStr = getMeta("Repo-Next-Review-Due");
                 const retirementStr = getMeta("Repo-Expected-Retirement-Date");
 
-                // 4. Date Math Helper
                 const getDiffDays = (dateStr) => {
                   if (!dateStr || dateStr.toLowerCase() === 'tbc') return null;
                   const targetDate = new Date(dateStr);
-                  if (isNaN(targetDate)) return null;
+                  if (isNaN(targetDate.getTime())) return null;
                   return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
                 };
 
-                // Check Review Due
                 const reviewDiff = getDiffDays(nextReviewStr);
+                // FIX: Changed repo.name to name
                 if (reviewDiff !== null && reviewDiff <= thresholdDays) {
-                  dueList += `\n- ${repo.name} | Status: ${status} | Next Review: ${nextReviewStr} | Service: ${serviceName}`;
+                  dueList += `\n- ${name} | Status: ${status} | Next Review: ${nextReviewStr} | Service: ${serviceName}`;
                 }
 
-                // Check Retirement Due
                 const retireDiff = getDiffDays(retirementStr);
+                // FIX: Changed repo.name to name
                 if (retireDiff !== null && retireDiff <= retireThreshold) {
-                  retireList += `\n- ${repo.name} | Status: ${status} | Retirement: ${retirementStr} | Service: ${serviceName}`;
+                  retireList += `\n- ${name} | Status: ${status} | Retirement: ${retirementStr} | Service: ${serviceName}`;
                 }
 
               } catch (err) {
-                // Skips if repo has no README (404)
-                console.log(`Skipping ${repo.name}: No README found.`);
+                // FIX: Changed repo.name to name
+                console.log(`Skipping ${name}: No README found.`);
               }
             }
 
-            // 5. Export to GITHUB_ENV
             core.exportVariable('DUE_LIST', dueList.trim());
             core.exportVariable('RETIRE_LIST', retireList.trim());
 
