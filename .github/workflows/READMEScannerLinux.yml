@@ -40,7 +40,6 @@ jobs:
           ORG: uoy-trials
           REPO_LIST: ${{ steps.repos.outputs.result }}
           THRESHOLD_DAYS: 30
-          RETIRE_THRESHOLD: 90
         with:
           github-token: ${{ secrets.AUTH_GITHUB_TOKEN }}
           script: |
@@ -90,7 +89,7 @@ jobs:
 
                 const retireDiff = getDiffDays(retirementStr);
                 // FIX: Changed repo.name to name
-                if (retireDiff !== null && retireDiff <= retireThreshold) {
+                if (retireDiff !== null && retireDiff <= thresholdDays) {
                   retireList += `\n- ${name} | Status: ${status} | Retirement: ${retirementStr} | Service: ${serviceName}`;
                 }
             }
