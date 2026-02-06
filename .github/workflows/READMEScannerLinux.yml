@@ -24,14 +24,17 @@ jobs:
           github-token: ${{ secrets.AUTH_GITHUB_TOKEN }}
           script: |
             const org = process.env.ORG;
+            echo "$org"
             const repos = await github.paginate(
               github.rest.repos.listForOrg,
               { org }
             );
+            echo "$repos"
             const filtered = repos
               .filter(r => !r.archived && !r.name.startsWith("stats-"))
               .map(r => r.name);
             return filtered.join("\n");
+            echo "$filtered"
 
       - name: Check repos
         env:
