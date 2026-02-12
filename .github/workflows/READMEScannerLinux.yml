@@ -17,7 +17,7 @@ jobs:
 
       - name: Fetch repos
         id: repos
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           ORG: uoy-trials
         with:
@@ -35,7 +35,7 @@ jobs:
             return filtered;
 
       - name: Check repos metadata
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           ORG: uoy-trials
           REPO_LIST: ${{ steps.repos.outputs.result }}
