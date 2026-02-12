@@ -108,7 +108,7 @@ jobs:
           Set-Variable -Name "RETIRE_TABLE" -Value $RETIRE_TABLE -Scope Global
 
       - name: Send email
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v9
         with:
           server_address: "smtp.york.ac.uk"
           server_port: 25

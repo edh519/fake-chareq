@@ -174,7 +174,7 @@ jobs:
             echo "EOF" >> $GITHUB_ENV
           
       - name: Send email
-        uses: dawidd6/action-send-mail@v5
+        uses: dawidd6/action-send-mail@v9
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: ${{ secrets.MAIL_PORT }}
