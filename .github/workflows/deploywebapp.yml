@@ -1,0 +1,130 @@
+name: Deploy web app to hsciytuweb with DbUp Migrations
+
+on: [push]
+
+jobs:
+  build-and-deploy:
+
+    runs-on: [self-hosted, windows, x64, hsciytuweb2]  
+
+    steps:
+    - name: Setup Variables
+      shell: pwsh
+      run: |
+        # Use the input if available, otherwise default to 'DatReq'
+        $SiteName = "${{ github.event.inputs.SITE_NAME }}"
+        if ([string]::IsNullOrWhiteSpace($SiteName)) { $SiteName = "DatReq" }
+        
+        $EnvName = "${{ github.event.inputs.environment }}"
+        if ([string]::IsNullOrWhiteSpace($EnvName)) { $EnvName = "Training" }
+    
+        echo "SITE_NAME=$SiteName" >> $env:GITHUB_ENV
+        echo "DEPLOY_ENV=$EnvName" >> $env:GITHUB_ENV
+
+    - name: Checkout repository code
+      uses: actions/checkout@v5
+
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x' 
+    - name: Check and Add NuGet Source
+      run: |
+        $sourceName = "github-uoy-trials"
+        $sourceUrl = "https://nuget.pkg.github.com/uoy-trials/index.json"
+        $nugetSources = dotnet nuget list source
+        if ($nugetSources -match [regex]::Escape($sourceUrl)) {
+        Write-Host "The NuGet source for '$sourceUrl' is already present."
+        } else {
+          Write-Host "The NuGet source for '$sourceUrl' is not present. Adding it now..."
+          dotnet nuget add source $sourceUrl --username "${{ secrets.UOY_TRIALS_NUGET_USERNAME }}" --password "${{ secrets.UOY_TRIALS_NUGET_PASSWORD }}" --name $sourceName --store-password-in-clear-text
+        }
+      shell: pwsh
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build application
+      run: dotnet build --configuration Release --no-restore 
+
+    - name: Run tests
+      run: dotnet test --verbosity normal
+
+    - name: Set Deployment Variables
+      id: vars
+      run: |
+        $trial = "${{ github.event.inputs.SITE_NAME }}"
+        $envType = "${{ github.event.inputs.environment }}"
+        
+        # Logic from Publish-Website: Training adds a suffix to site/app pool name
+        $siteName = if ($envType -eq "Training") { $trial + "Training" } else { $trial }
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmm"
+        
+        # See our normal publishing process e.g \\hsciytuweb2\Builds\ChaReq\20260316
+        $webRoot = "D:\wwwroot\$siteName"
+        $archiveDir = "D:\Archive\$siteName"
+        $tempPublish = "D:\Builds\$siteName"
+        $logFilePath = "D:\DeploymentLogs\$siteName.txt"
+        
+        echo "SITE_NAME=$siteName" >> $env:GITHUB_ENV
+        echo "WEB_ROOT=$webRoot" >> $env:GITHUB_ENV
+        echo "ARCHIVE_DIR=$archiveDir" >> $env:GITHUB_ENV
+        echo "TEMP_PUBLISH=$tempPublish" >> $env:GITHUB_ENV
+        echo "TIMESTAMP=$timestamp" >> $env:GITHUB_ENV
+        echo "LOG_FILE_PATH=$logFilePath" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Publish web application
+      id: publish
+      run: |        
+        New-Item -ItemType Directory -Force -Path $env:TEMP_PUBLISH
+        
+        dotnet publish WebApp/WebApp.csproj --output $env:TEMP_PUBLISH --configuration Release --no-build 
+      shell: pwsh
+ 
+    - name: Run Database Migrations
+      run: |
+        $conn_string = ""
+        if ("${{ github.event.inputs.environment }}" -ieq "Production") {
+          $conn_string = "${{ secrets.PROD_CONNECTION_STRING }}"
+        } else {
+          $conn_string = "${{ secrets.TRAINING_CONNECTION_STRING }}"
+        }
+        
+        if ([string]::IsNullOrWhiteSpace($conn_string)) {
+            Write-Error "Connection string for environment '${{ github.event.inputs.environment }}' is not configured."
+            exit 1
+        }
+        dotnet run --project WebApp.Migrations/WebApp.Migrations.csproj -- "$conn_string" 
+      shell: pwsh
+
+    - name: Set Up PowerShell Environment
+      run: |
+        Write-Host "Setting up PowerShell Environment"
+        Import-Module IISAdministration -Force -Scope Local
+      shell: powershell  
+
+    - name: Deploy to IIS
+      run: |
+        powershell -NoProfile -ExecutionPolicy Bypass -File ./Deploy/deploywebapp.ps1 -Environment "${{ github.event.inputs.environment }}" -GitHubActor "${{ github.actor }}" -ArtifactPath "${{ env.TEMP_PUBLISH }}" -SiteName "${{ env.SITE_NAME }}" -WebRoot "${{ env.WEB_ROOT }}" -LogFilePath "${{ env.LOG_FILE_PATH }}"
+      shell: pwsh
+
+    - name: Cleanup and Upload Artifact
+      if: always()
+      run: |
+        $zipPath = "${{ env.TEMP_PUBLISH }}.zip"
+        Compress-Archive -Path "${{ env.TEMP_PUBLISH }}\*" -DestinationPath $zipPath
+        echo "ZIP_PATH=$zipPath" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Delete publish output folder
+      if: always()
+      run: |
+          Remove-Item -Path "${{ env.TEMP_PUBLISH }}" -Recurse -Force
+      shell: pwsh
+
+    - name: Publish Build Artifact for archival
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ env.SITE_NAME }}-${{ env.TIMESTAMP }}
+        path: ${{ env.ZIP_PATH }}
