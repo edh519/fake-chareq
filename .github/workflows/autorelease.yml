@@ -1,0 +1,55 @@
+name: Daily Automated Release
+
+on:
+  schedule:
+    # Runs at 23:59 UTC every day (Adjust to your preferred time/timezone)
+    - cron: '59 23 * * *'
+  workflow_dispatch: # Allows you to trigger this manually from the Actions tab for testing
+
+jobs:
+  check-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Required to create releases and tags
+      pull-requests: read   # Required to fetch PR data
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for merged PRs today
+        id: check_prs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get ISO 8601 timestamp for 24 hours ago
+          SINCE_DATE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "Checking for PRs merged into main since $SINCE_DATE..."
+          
+          # Use GitHub CLI to count merged PRs matching the criteria
+          PR_COUNT=$(gh pr list --base main --state merged --search "merged:>=$SINCE_DATE" --json number --jq 'length')
+          
+          echo "Found $PR_COUNT merged PR(s)."
+          
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "has_merges=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_merges=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Tag and Release
+        if: steps.check_prs.outputs.has_merges == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create a unique tag using the date (e.g., v2026.06.23)
+          TAG_NAME="v$(date +%Y%m%d)"
+          RELEASE_NAME="Release $TAG_NAME"
+          
+          echo "Creating release: $RELEASE_NAME"
+          
+          # Create the release and automatically generate release notes from the merged PRs
+          gh release create "$TAG_NAME" \
+            --target main \
+            --title "$RELEASE_NAME" \
+            --generate-notes
