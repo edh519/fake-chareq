@@ -12,8 +12,8 @@ jobs:
       pull-requests: read   # Required to fetch PR data
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repositorgdfgbzdfgbzddfy
+        uses: actions/checkout@v7
 
       - name: Check for merged PRs today
         id: check_prs
