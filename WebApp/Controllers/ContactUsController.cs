@@ -57,7 +57,7 @@ public class ContactUsController : Controller
 
         if (contactUs is null) return RedirectToAction("Index");
 
-        ContactUsViewModel model = new ContactUsViewModel
+        ContactUsViewModel testchangename = new ContactUsViewModel
         {
             Id = contactUs.ContactUsId,
             Email = contactUs.Email,
